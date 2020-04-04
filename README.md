@@ -1,17 +1,14 @@
 # What is it?
-An API to query the location data for COVID-19 diagnosed cases. Built during the [COVID-19 Global Hackathon](https://devpost.com/software/test-test-test-test-123)
+An API to privately store the location data for COVID-19 diagnosed cases in Tasmania. And improve the ability to contact trace. It stores location data from people that are both diagnosed and not diagnoses with COVID-19. For the simple ability that contacts can be immediately notifified if they have historically crossed paths with a newly diagnosed case.
+
+All data points stored contain no personal information. The only identifying characteristic is an unguessable hashed ID that is only known to the user that hashed it and perhaps a push notification token that allows the server to send notifications to the user.
+
+ 
 
 # Why
-Tracking the spread of the virus is immensly valuable. But if everyone rolls their own solution for collecting this data its value is diminished. By being API only we make the data set easy to access and easy to contribute too. Giving other devs a head start on their solution building.
-
-To kick things off we've provided [a simple website](https://www.trackcovid19spread.com) any COVID-19 positive users can use to anonymously submit their location data to help track the spread. 
+This repo was forked from [here](https://github.com/AlastairTaft/track-covid-19-spread). The concept there was to make diagnosed people's location history publically accessible when given freely by the individual. However the location data here is collected in the background from an app so it does not feel acceptible to treat this data in the same and as such the data is private by default. Also both data from non infected cases and infected cases are tracked to make contact tracing more rapid, therefor it is all private by default.s
 
 # API 
-Please use our API to get COVID-19 patient's historic location data or to submit location history. Use it ethically to build solutions to help fight the virus. Please share it, let's build a single source of truth with critical mass.
-
-Alternatively feel free to fork this if you need to roll your own solution.
-
-Postman collection [here](https://www.getpostman.com/collections/54111bc0dbf4e859c823).
 
 ## /location-history
 
@@ -22,20 +19,22 @@ Method: GET
 ### Parameters
 | Name       | Required | Description |
 | ---------- | -------- | ----------- |
-| geo-within | Yes      | A valid [Geo JSON geometry object](https://tools.ietf.org/html/rfc7946#section-3.1) |
+| geo-within | No       | A valid [Geo JSON geometry object](https://tools.ietf.org/html/rfc7946#section-3.1) |
+| uniqueId   | Yes      | The unique reference id identifiying the user. |
 | skip       | No       | An integer, skip the first n records | 
 | limit      | No       | Get up to this many records back, max limit is 500 | 
+| from       | No       | Get records after this EPOCH. |
+| to     | No       | Get records before this EPOCH. |
 
-Returns a [Geo JSON FeatureCollection](https://tools.ietf.org/html/rfc7946#section-3.3)
+Returns a [Geo JSON FeatureCollection](https://tools.ietf.org/html/rfc7946#section-3.3) Sorted by feature timestamp in descending order.
 
 Example url path.
 ```
-/location-history?geo-within=%7B%22type%22%3A%22Polygon%22%2C%22coordinates%22%3A%5B%5B%5B100%2C-20%5D%2C%5B110%2C-20%5D%2C%5B110%2C-30%5D%2C%5B100%2C-30%5D%2C%5B100%2C-20%5D%5D%5D%7D
-```
+/location-history?uniqueId=test&geo-within=%7B%22type%22%3A%22Polygon%22%2C%22coordinates%22%3A%5B%5B%5B100%2C-20%5D%2C%5B110%2C-20%5D%2C%5B110%2C-30%5D%2C%5B100%2C-30%5D%2C%5B100%2C-20%5D%5D%5D%7D
 
 ## /submit-location-history
 
-Submit location history for a diagnosed COVID-19 patient. All location history must be stored as a [GeoJSON Feature Collection](https://tools.ietf.org/html/rfc7946#section-3.3).
+Submit location history. All location history must be stored as a [GeoJSON Feature Collection](https://tools.ietf.org/html/rfc7946#section-3.3).
 
 Method: POST
 
@@ -44,6 +43,15 @@ Method: POST
 | -------- | -------- | ----------- |
 | type     | Yes      | Accepts only a value of "FeatureCollection" |
 | features | Yes      | An array of [Geo JSON Feature](https://tools.ietf.org/html/rfc7946#section-3.2) records | 
+
+#### Properties
+Values that can be populated on the Feature properties object.
+
+| Name      | Type    | Required | Description |
+| ----      | ------- | -------- | ----------- |
+| infected  | Boolean | No       | True if the person this location history is linked to has COVID-19 |
+| timestamp | Integer | Yes      | The timestamp of location point. |
+| uniqueId  | String  | Yes      | The, unguessable, unique id only known by the reporting user. |
 
 e.g.
 ```json

@@ -8,11 +8,12 @@
   },
   "devDependencies": {
     "jest": "^25.2.3",
+    "nodemon": "^2.0.2",
     "serverless-domain-manager": "^3.3.1",
     "serverless-offline": "^6.1.2"
   },
   "scripts": {
-    "start": "MONGO_URL=mongodb://localhost:27017 MONGO_DATABASE=covid npx sls offline start",
+    "start": "MONGO_URL=mongodb://localhost:27017 MONGO_DATABASE=covid nodemon --exec \"sls offline start\" -e \"js\"",
     "test": "jest"
   }
 }

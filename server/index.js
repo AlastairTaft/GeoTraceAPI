@@ -3,7 +3,8 @@ var { getConnection } = require('./db/connect')
 var { handleServerResponse } = require('./server/server')
 var { ServerError } = require('./server/errors')
 var FeatureCollection = require('./geojson/FeatureCollection')
-var { insertFeature, searchFeatures } = require('./db/features')
+var { bulkInsertFeatures, searchFeatures, markAtRisk } = require('./db/features')
+var { validateFeature, validateGetLocationInput, normaliseGetLocationInput } = require('./server/validation')
 
 /**
  * Accept a Geo JSON FeatureCollection as the request body
@@ -47,9 +48,18 @@ const submitLocationHistory = async event => {
   var featureCollection = new FeatureCollection()
   featureCollection.parse(JSON.parse(event.body))
   var { db, client } = await getConnection()
-  await Promise.all(featureCollection.features.map(async feature => {
-    await insertFeature(db, feature, requesterInfo)
+
+  // Validate features
+  featureCollection.features.forEach(f => validateFeature(f))
+  await bulkInsertFeatures(db, featureCollection.features, requesterInfo)
+
+  // If any location features are marked as infected need to do the contact
+  // tracing
+  var infectionPoints = featureCollection.features.map(f => f.properties.infected)
+  await Promise.all(infectionPoints.map(async feature => {
+    return markAtRisk(feature)
   }))
+
   client.close()
 
   return {
@@ -63,27 +73,12 @@ const submitLocationHistory = async event => {
  * Get location history
  */
 const getLocationHistory = async event => {
-  var geoWithin = event.queryStringParameters['geo-within']
-  var { limit, skip } = event.queryStringParameters
-  var limit = limit !== undefined ? parseInt(limit) : limit
-  var skip = skip !== undefined ? parseInt(skip) : skip
-  geoWithin = JSON.parse(geoWithin)
-
-  if (limit !== undefined && isNaN(limit))
-    throw new ServerError('Invalid value for \'limit\'.')
-  if (limit !== undefined && limit > 500)
-    throw new ServerError('Max value for \'limit\' is 500.')
-  if (skip !== undefined && isNaN(skip))
-    throw new ServerError('Invalid value for \'skip\'.')
-
+  validateGetLocationInput(event.queryStringParameters)
+  
   var { db, client } = await getConnection()
   var features = await searchFeatures(
     db, 
-    { 
-      geoWithin,
-      skip,
-      limit,
-    },
+    normaliseGetLocationInput(event.queryStringParameters),
   )
   client.close()
   return {

@@ -1,4 +1,4 @@
-service: track-covid-19-spread
+service: au-tas-track-covid-19-spread
 provider:
   name: aws
   runtime: nodejs12.x
@@ -30,7 +30,7 @@ custom:
   serverless-offline:
     port: 5001
   customDomain:
-    domainName: api.trackcovid19spread.com
+    domainName: au-tas-api.trackcovid19spread.com
     basePath: ''
     certificateName: '*.trackcovid19spread.com'
     createRoute53Record: true

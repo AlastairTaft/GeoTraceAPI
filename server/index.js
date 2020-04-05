@@ -1,5 +1,4 @@
 var memoize = require("memoizee")
-require('./types')
 var { getConnection } = require('./db/connect')
 var { handleServerResponse } = require('./server/server')
 var { ServerError } = require('./server/errors')
@@ -58,8 +57,6 @@ const submitLocationHistory = async event => {
   featureCollection.parse(JSON.parse(event.body))
   var { db, client } = await getConnection()
 
-  
-
   // Validate features
   await Promise.all(featureCollection.features.map(async f => {
     serverValidation.validateFeature(f)
@@ -104,10 +101,12 @@ const getLocationHistory = async event => {
   }
 }
 
+/**
+ * Mark user has been diagnosed with COVID-19.
+ */
 const reportInfected = async event => {
   serverValidation.validateReportInfectedInput(event)
-  var { uniqueId, timestampShowingSymptoms } = 
-    serverValidation.normaliseReportInfectedInput(event)
+  var { uniqueId, timestampShowingSymptoms } = JSON.parse(event.body)
   var { db, client } = await getConnection()
   await dbUsers.setUserInfected(db, uniqueId, timestampShowingSymptoms)
   // TODO Mark all relevant records as atRisk
@@ -115,6 +114,9 @@ const reportInfected = async event => {
   return { 'ok': true }
 }
 
+/**
+ * Get the status for the user.
+ */
 const getStatus = async event => {
   if (!event.queryStringParameters['unique-id'])
     throw new Error('Missing \'unique-id\' prop.')
@@ -127,7 +129,6 @@ const getStatus = async event => {
   return {
     infected,
   }
-
 }
 
 module.exports = {

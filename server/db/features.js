@@ -1,31 +1,20 @@
 
 /**
- * @param {MongoDb} db
- * @param {Feature} feature
- * @param {object} extraProperties 
+ * Bulk insert feature records.
+ * @param {MongoDB} db
+ * @param {Array<GeoJSONFeature>} features
+ * @param {object} requesterInfo Stored along side the feature, used as a 
+ * retroactive protection against abuse, can remove records added by the
+ * same IP, etc.
+ * @returns {Promise}
  */
-const insertFeature = async function(db, feature, requesterInfo){
-  var collection = db.collection('features')
-  var record = await collection.findOne({ feature })
-  if (record) return record
-  return collection.insertOne(
-    {
-      feature,
-      requesterInfo,
-      createdAt: (new Date()).valueOf(),
-    },
-  )
-}
-
 const bulkInsertFeatures = (db, features, requesterInfo) => {
   var collection = db.collection('features')
   var operations = features.map(feature => {
-    
     var filter = {
       'feature.properties.uniqueId': feature.properties.uniqueId,
       'feature.properties.timestamp': feature.properties.timestamp,
     }
-    
     return { 
       updateOne: { 
         filter,
@@ -44,6 +33,14 @@ const bulkInsertFeatures = (db, features, requesterInfo) => {
 /**
  * Search features.
  * @param {MongoDb} db
+ * @param {GeoJSONGeometry} options.geoWithin Search a specific area.
+ * @param {number} skip Skip n records
+ * @param {number} limit Limit searched records, upperlimit is 500
+ * @param {number} from EPOCH of from and includings
+ * @param {number} to EPOCH of records before
+ * @param {string} uniqueId The unique user ids
+ * @param {boolean} atRisk If true only search for records marked as 'at risk'
+ * @returns {Promise<Array<GeoJSONFeature>>}
  */
 const searchFeatures = async function(db, options){
   var { 
@@ -55,6 +52,7 @@ const searchFeatures = async function(db, options){
     uniqueId,
     atRisk,
   } = options
+  limit = Math.min(limit, 500)
   var collection = db.collection('features')
   var filter = {
     'feature.properties.uniqueId': uniqueId,
@@ -87,7 +85,6 @@ const markAtRisk = async function(db, feature){
 }
 
 module.exports = {
-  insertFeature,
   searchFeatures,
   bulkInsertFeatures,
   markAtRisk,

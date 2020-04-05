@@ -1,12 +1,12 @@
 
 
-const STATE_ENUM = {
-  OK: 'Ok',
-  INFECTED: 'Infected',
-  // Means removed from the pool of being able to infect anyone.
-  REMOVED: 'Removed',
-}
-
+/**
+ * Mark a user as diagnosed with COVID-19
+ * @param {MongoDB} db
+ * @param {string} uniqueId
+ * @param {number} timestampShowingSymptoms
+ * @returns {Promise}
+ */
 const setUserInfected = async function(db, uniqueId, timestampShowingSymptoms){
   var collection = db.collection('infected')
   return collection.update(

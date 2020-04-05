@@ -17,6 +17,10 @@ const validateFeature = function(feature){
       'Expected feature properties \'infected\' prop to be boolean.')
 }
 
+/**
+ * Validate the input for the get locations endpoint.
+ * @param {object} queryStringParameters
+ */
 const validateGetLocationInput = function(queryStringParameters){
   assert(queryStringParameters['unique-id'], '\'unique-id\' is required.')
   if ('geo-within' in queryStringParameters){
@@ -51,6 +55,12 @@ const validateGetLocationInput = function(queryStringParameters){
   }
 }
 
+/**
+ * Converts the get parameters into workable values for the get locations 
+ * endpoint.
+ * @param {object} queryStringParameters
+ * @returns {Promise}
+ */
 const normaliseGetLocationInput = function(queryStringParameters){
   var newVals = {}
   newVals.uniqueId = queryStringParameters['unique-id']
@@ -71,6 +81,10 @@ const normaliseGetLocationInput = function(queryStringParameters){
   return newVals
 }
 
+/**
+ * Validate the input for the report infected endpoint.
+ * @param {object} event
+ */
 const validateReportInfectedInput = function(event){
   try {
     var body = JSON.parse(event.body)
@@ -89,14 +103,9 @@ const validateReportInfectedInput = function(event){
     throw new Error('Invalid \'timestampShowingSymptoms\' param.')
 }
 
-const normaliseReportInfectedInput = function(event){
-  return JSON.parse(event.body)
-}
-
 module.exports = {
   validateFeature,
   validateGetLocationInput,
   normaliseGetLocationInput,
   validateReportInfectedInput,
-  normaliseReportInfectedInput,
 }

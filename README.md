@@ -73,7 +73,7 @@ e.g.
 }
 ```
 
-## report-infected
+## /report-infected
 
 Report the user is diagnosed with COVID-19.
 
@@ -94,7 +94,7 @@ e.g.
 }
 ```
 
-## status
+## /status
 
 Get the user status, i.e. whether or not they are infected.
 

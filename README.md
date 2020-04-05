@@ -114,3 +114,6 @@ Returns an object with the prop 'infected', e.g.
   "infected": false
 }
 ```
+
+# License
+Fork it, hack it, repurpose it, do what you gotta do to aid in fighting the virus, but ensure what you do is ethical.

@@ -24,7 +24,8 @@ Method: GET
 | skip       | No       | An integer, skip the first n records | 
 | limit      | No       | Get up to this many records back, max limit is 500 | 
 | from       | No       | Get records after this EPOCH. |
-| to     | No       | Get records before this EPOCH. |
+| to         | No       | Get records before this EPOCH. |
+| at-risk    | No       | Only returns records that are marked as at risk. i.e. have come in close proximity to a COVID-19 positive person. |
 
 Returns a [Geo JSON FeatureCollection](https://tools.ietf.org/html/rfc7946#section-3.3) Sorted by feature timestamp in descending order.
 

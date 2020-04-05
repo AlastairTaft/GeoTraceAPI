@@ -52,7 +52,8 @@ const searchFeatures = async function(db, options){
     limit = 500, 
     from,
     to, 
-    uniqueId
+    uniqueId,
+    atRisk,
   } = options
   var collection = db.collection('features')
   var filter = {
@@ -66,6 +67,8 @@ const searchFeatures = async function(db, options){
     filter['feature.properties.timestamp'] = { $gte: from }
   if (to)
     filter['feature.properties.timestamp'] = { $lt: to }
+  if (atRisk)
+    filter['feature.properties.atRisk'] = true
   var features = await collection.find(
     filter,
     {projection:{_id:0}},

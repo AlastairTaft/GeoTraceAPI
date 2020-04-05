@@ -74,7 +74,6 @@ const submitLocationHistory = async event => {
  */
 const getLocationHistory = async event => {
   validateGetLocationInput(event.queryStringParameters)
-  
   var { db, client } = await getConnection()
   var features = await searchFeatures(
     db, 

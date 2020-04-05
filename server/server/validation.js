@@ -42,6 +42,13 @@ const validateGetLocationInput = function(queryStringParameters){
     var to = Number(queryStringParameters['to'])
     assert(Number.isInteger(to), 'Expected \'to\' to be an integer.')
   }
+  if ('at-risk' in queryStringParameters){
+    var atRisk = queryStringParameters['at-risk']
+    assert(
+      ['true', 'false', '1', '0'].includes(atRisk),
+      `Expected boolean, e.g. 'true', 'false', '1' or '0' for 'at-risk'.`,
+    )
+  }
 }
 
 const normaliseGetLocationInput = function(queryStringParameters){
@@ -57,6 +64,10 @@ const normaliseGetLocationInput = function(queryStringParameters){
     newVals.from = Number(queryStringParameters['from'])
   if ('to' in queryStringParameters)
     newVals.to = Number(queryStringParameters['to'])
+  if ('at-risk' in queryStringParameters){
+    var atRisk =  queryStringParameters['at-risk']
+    newVals.atRisk = (atRisk == '1' || atRisk == 'true')
+  }
   return newVals
 }
 

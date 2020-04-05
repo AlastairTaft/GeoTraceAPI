@@ -6,6 +6,8 @@ All data points stored contain no personal information. The only identifying cha
 # Why
 This repo was forked from [here](https://github.com/AlastairTaft/track-covid-19-spread). The concept there was to make diagnosed people's location history publically accessible when given freely by the individual. However the location data here is collected in the background from an app so it does not feel acceptible to treat this data as the same and as such the data is private by default. Also both data from non infected cases and infected cases are tracked to make contact tracing more rapid, therefor it is all made private by default.
 
+There is a production ready app that consumes this backend [here](https://github.com/AlastairTaft/TasTraceTogether).
+
 # API 
 
 ## /location-history

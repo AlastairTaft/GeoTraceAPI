@@ -30,6 +30,7 @@ Returns a [Geo JSON FeatureCollection](https://tools.ietf.org/html/rfc7946#secti
 Example url path.
 ```
 /location-history?uniqueId=test&geo-within=%7B%22type%22%3A%22Polygon%22%2C%22coordinates%22%3A%5B%5B%5B100%2C-20%5D%2C%5B110%2C-20%5D%2C%5B110%2C-30%5D%2C%5B100%2C-30%5D%2C%5B100%2C-20%5D%5D%5D%7D
+```
 
 ## /submit-location-history
 

@@ -1,10 +1,10 @@
 # What is it?
 An API to privately store the location data for COVID-19 diagnosed cases in Tasmania. And improve the ability to contact trace. It stores location data from people that are both diagnosed and not diagnoses with COVID-19. For the simple ability that contacts can be immediately notifified if they have historically crossed paths with a newly diagnosed case.
 
-All data points stored contain no personal information. The only identifying characteristic is an unguessable hashed ID that is only known to the user that hashed it and perhaps a push notification token that allows the server to send notifications to the user.
+All data points stored contain no personal information. The only identifying characteristic is an unguessable hashed ID that is only known to the user that hashed it and perhaps, in the future, a push notification token that allows the server to send notifications to the user.
 
 # Why
-This repo was forked from [here](https://github.com/AlastairTaft/track-covid-19-spread). The concept there was to make diagnosed people's location history publically accessible when given freely by the individual. However the location data here is collected in the background from an app so it does not feel acceptible to treat this data in the same and as such the data is private by default. Also both data from non infected cases and infected cases are tracked to make contact tracing more rapid, therefor it is all private by default.s
+This repo was forked from [here](https://github.com/AlastairTaft/track-covid-19-spread). The concept there was to make diagnosed people's location history publically accessible when given freely by the individual. However the location data here is collected in the background from an app so it does not feel acceptible to treat this data as the same and as such the data is private by default. Also both data from non infected cases and infected cases are tracked to make contact tracing more rapid, therefor it is all made private by default.
 
 # API 
 

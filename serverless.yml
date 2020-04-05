@@ -26,6 +26,21 @@ functions:
           path: /location-history
           method: GET
           cors: true
+  reportInfected:
+    handler: server/index.reportInfected
+    events: 
+      - http:
+          path: /report-infected
+          method: PUT
+          cors: true
+  status:
+    handler: server/index.getStatus
+    events: 
+      - http:
+          path: /status
+          method: GET
+          cors: true
+    
 custom:
   serverless-offline:
     port: 5001

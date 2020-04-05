@@ -73,3 +73,43 @@ e.g.
   ]
 }
 ```
+
+## report-infected
+
+Report the user is diagnosed with COVID-19.
+
+Method: PUT
+
+### Parameters
+| Name                       | Type    | Required | Description |
+| -------------------------- | ------- | -------- | ----------- |
+| uniqueId                  | String  | Yes      | The uniqueId identifying the user. |
+| timestamp-showing-symptoms | Integer | Yes      | At what point did the user start seeing symptoms. a UNIX Epoch. |
+
+e.g.
+
+```json
+{
+  "uniqueId": "xyz123",
+  "timestampShowingSymptoms": 1586068927222
+}
+```
+
+## status
+
+Get the user status, i.e. whether or not they are infected.
+
+Method: Get
+
+### Parameters
+| Name     | Type    | Required | Description |
+| -------- | ------- | -------- | ----------- |
+| uniqueId | String  | Yes      | The uniqueId identifying the user. |
+
+Returns an object with the prop 'infected', e.g.
+
+```json
+{
+  "infected": false
+}
+```

@@ -1,10 +1,19 @@
+var memoize = require("memoizee")
 require('./types')
 var { getConnection } = require('./db/connect')
 var { handleServerResponse } = require('./server/server')
 var { ServerError } = require('./server/errors')
 var FeatureCollection = require('./geojson/FeatureCollection')
-var { bulkInsertFeatures, searchFeatures, markAtRisk } = require('./db/features')
-var { validateFeature, validateGetLocationInput, normaliseGetLocationInput } = require('./server/validation')
+var dbFeatures = require('./db/features')
+var dbUsers = require('./db/users')
+var serverValidation = require('./server/validation')
+
+var getUserInfected = memoize(
+  dbUsers.getUserInfected,
+  {
+    normalizer: (db, uniqueId) => uniqueId
+  },
+)
 
 /**
  * Accept a Geo JSON FeatureCollection as the request body
@@ -49,15 +58,23 @@ const submitLocationHistory = async event => {
   featureCollection.parse(JSON.parse(event.body))
   var { db, client } = await getConnection()
 
+  
+
   // Validate features
-  featureCollection.features.forEach(f => validateFeature(f))
-  await bulkInsertFeatures(db, featureCollection.features, requesterInfo)
+  await Promise.all(featureCollection.features.map(async f => {
+    serverValidation.validateFeature(f)
+    // If the user is infected, mark it as such
+    var infected = await getUserInfected(db, f.properties['uniqueId'])
+    console.log('#infected', infected)
+    f.properties['infected'] = infected
+  }))
+  await dbFeatures.bulkInsertFeatures(db, featureCollection.features, requesterInfo)
 
   // If any location features are marked as infected need to do the contact
   // tracing
   var infectionPoints = featureCollection.features.map(f => f.properties.infected)
   await Promise.all(infectionPoints.map(async feature => {
-    return markAtRisk(feature)
+    return dbFeatures.markAtRisk(feature)
   }))
 
   client.close()
@@ -73,11 +90,11 @@ const submitLocationHistory = async event => {
  * Get location history
  */
 const getLocationHistory = async event => {
-  validateGetLocationInput(event.queryStringParameters)
+  serverValidation.validateGetLocationInput(event.queryStringParameters)
   var { db, client } = await getConnection()
-  var features = await searchFeatures(
+  var features = await dbFeatures.searchFeatures(
     db, 
-    normaliseGetLocationInput(event.queryStringParameters),
+    serverValidation.normaliseGetLocationInput(event.queryStringParameters),
   )
   client.close()
   return {
@@ -87,7 +104,35 @@ const getLocationHistory = async event => {
   }
 }
 
+const reportInfected = async event => {
+  serverValidation.validateReportInfectedInput(event)
+  var { uniqueId, timestampShowingSymptoms } = 
+    serverValidation.normaliseReportInfectedInput(event)
+  var { db, client } = await getConnection()
+  await dbUsers.setUserInfected(db, uniqueId, timestampShowingSymptoms)
+  // TODO Mark all relevant records as atRisk
+  client.close()
+  return { 'ok': true }
+}
+
+const getStatus = async event => {
+  if (!event.queryStringParameters['unique-id'])
+    throw new Error('Missing \'unique-id\' prop.')
+  var { db, client } = await getConnection()
+  var infected = await dbUsers.getUserInfected(
+    db,
+    event.queryStringParameters['unique-id']
+  )
+  client.close()
+  return {
+    infected,
+  }
+
+}
+
 module.exports = {
   submitLocationHistory: handleServerResponse(submitLocationHistory),
   getLocationHistory: handleServerResponse(getLocationHistory),
+  reportInfected: handleServerResponse(reportInfected),
+  getStatus: handleServerResponse(getStatus),
 }

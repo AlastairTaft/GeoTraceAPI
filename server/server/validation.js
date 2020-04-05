@@ -71,8 +71,32 @@ const normaliseGetLocationInput = function(queryStringParameters){
   return newVals
 }
 
+const validateReportInfectedInput = function(event){
+  try {
+    var body = JSON.parse(event.body)
+  } catch (error){
+    throw new Error('Cannot parse body of request.')
+  }
+  var { uniqueId, timestampShowingSymptoms } = body
+  if (!uniqueId)
+    throw new Error('Missing parameter \'uniqueId\'.')
+  if (!timestampShowingSymptoms)
+    throw new Error('Missing parameter \'timestampShowingSymptoms\'.')
+  timestampShowingSymptoms = Number(timestampShowingSymptoms)
+  if (Number.isInteger(timestampShowingSymptoms) == false)
+    throw new Error('Invalid \'timestampShowingSymptoms\' param.')
+  if (isNaN(new Date(timestampShowingSymptoms)))
+    throw new Error('Invalid \'timestampShowingSymptoms\' param.')
+}
+
+const normaliseReportInfectedInput = function(event){
+  return JSON.parse(event.body)
+}
+
 module.exports = {
   validateFeature,
   validateGetLocationInput,
   normaliseGetLocationInput,
+  validateReportInfectedInput,
+  normaliseReportInfectedInput,
 }

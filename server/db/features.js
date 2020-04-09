@@ -1,9 +1,8 @@
-
 /**
  * Bulk insert feature records.
  * @param {MongoDB} db
  * @param {Array<GeoJSONFeature>} features
- * @param {object} requesterInfo Stored along side the feature, used as a 
+ * @param {object} requesterInfo Stored along side the feature, used as a
  * retroactive protection against abuse, can remove records added by the
  * same IP, etc.
  * @returns {Promise}
@@ -15,16 +14,18 @@ const bulkInsertFeatures = (db, features, requesterInfo) => {
       'feature.properties.uniqueId': feature.properties.uniqueId,
       'feature.properties.timestamp': feature.properties.timestamp,
     }
-    return { 
-      updateOne: { 
+    return {
+      updateOne: {
         filter,
-        update: {$set: {
-          feature,
-          requesterInfo,
-          updatedAt: (new Date()).valueOf(),
-        }}, 
-        upsert: true 
-      } 
+        update: {
+          $set: {
+            feature,
+            requesterInfo,
+            updatedAt: new Date().valueOf(),
+          },
+        },
+        upsert: true,
+      },
     }
   })
   return collection.bulkWrite(operations)
@@ -42,36 +43,25 @@ const bulkInsertFeatures = (db, features, requesterInfo) => {
  * @param {boolean} atRisk If true only search for records marked as 'at risk'
  * @returns {Promise<Array<GeoJSONFeature>>}
  */
-const searchFeatures = async function(db, options){
-  var { 
-    geoWithin, 
-    skip = 0, 
-    limit = 500, 
-    from,
-    to, 
-    uniqueId,
-    atRisk,
-  } = options
+const searchFeatures = async function (db, options) {
+  var { geoWithin, skip = 0, limit = 500, from, to, uniqueId, atRisk } = options
   limit = Math.min(limit, 500)
   var collection = db.collection('features')
   var filter = {
     'feature.properties.uniqueId': uniqueId,
   }
   if (geoWithin)
-    filter['feature.geometry'] = { 
-      $geoWithin: { $geometry: geoWithin } 
-    } 
-  if (from)
-    filter['feature.properties.timestamp'] = { $gte: from }
-  if (to)
-    filter['feature.properties.timestamp'] = { $lt: to }
-  if (atRisk)
-    filter['feature.properties.atRisk'] = true
-  var features = await collection.find(
-    filter,
-    {projection:{_id:0}},
-  )
-  .sort({'feature.properties.timestamp': -1}).skip(skip).limit(limit) 
+    filter['feature.geometry'] = {
+      $geoWithin: { $geometry: geoWithin },
+    }
+  if (from) filter['feature.properties.timestamp'] = { $gte: from }
+  if (to) filter['feature.properties.timestamp'] = { $lt: to }
+  if (atRisk) filter['feature.properties.atRisk'] = true
+  var features = await collection
+    .find(filter, { projection: { _id: 0 } })
+    .sort({ 'feature.properties.timestamp': -1 })
+    .skip(skip)
+    .limit(limit)
   var features = await features.toArray()
   return features.map(f => f.feature)
 }
@@ -80,8 +70,13 @@ const searchFeatures = async function(db, options){
  * Find all other location points that would have been at the same place and
  * time and mark them as at risk.
  */
-const markAtRisk = async function(db, feature){
-  // TODO
+const markAtRisk = async function (db, feature) {
+  const options = {
+    geoWithin: feature.geometry,
+  }
+  const features = await searchFeatures(db, options)
+
+  // TODO mark all reseived features as "atRisk"
 }
 
 module.exports = {

@@ -1,5 +1,3 @@
-
-
 /**
  * Mark a user as diagnosed with COVID-19
  * @param {MongoDB} db
@@ -7,10 +5,14 @@
  * @param {number} timestampShowingSymptoms
  * @returns {Promise}
  */
-const setUserInfected = async function(db, uniqueId, timestampShowingSymptoms){
+const setUserInfected = async function (
+  db,
+  uniqueId,
+  timestampShowingSymptoms,
+) {
   var collection = db.collection('infected')
   return collection.update(
-    { uniqueId }, 
+    { uniqueId },
     { $set: { uniqueId, timestampShowingSymptoms } },
     { upsert: true },
   )
@@ -22,7 +24,7 @@ const setUserInfected = async function(db, uniqueId, timestampShowingSymptoms){
  * @param {string} uniqueId
  * @returns {Promise<boolean>}
  */
-const getUserInfected = async function(db, uniqueId){
+const getUserInfected = async function (db, uniqueId) {
   var collection = db.collection('infected')
   // TODO Update when user has recovered
   var total = await collection.find({ uniqueId }).count()
@@ -30,7 +32,13 @@ const getUserInfected = async function(db, uniqueId){
   return total > 0
 }
 
+const notifyRelatedUsersAboutRiskByFeatures = async features => {
+  // For each received feature but only 1 per user
+  // Generate message that will contain date and readable location when user encountered virus
+}
+
 module.exports = {
   setUserInfected,
   getUserInfected,
+  notifyRelatedUsersAboutRisk,
 }

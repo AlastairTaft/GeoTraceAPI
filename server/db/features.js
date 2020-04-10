@@ -44,7 +44,16 @@ const bulkInsertFeatures = (db, features, requesterInfo) => {
  * @returns {Promise<Array<GeoJSONFeature>>}
  */
 const searchFeatures = async function (db, options) {
-  var { geoWithin, skip = 0, limit = 500, from, to, uniqueId, atRisk } = options
+  var {
+    geoWithin,
+    centerSphere,
+    skip = 0,
+    limit = 500,
+    from,
+    to,
+    uniqueId,
+    atRisk,
+  } = options
   limit = Math.min(limit, 500)
   var collection = db.collection('features')
   var filter = {
@@ -57,6 +66,10 @@ const searchFeatures = async function (db, options) {
   if (from) filter['feature.properties.timestamp'] = { $gte: from }
   if (to) filter['feature.properties.timestamp'] = { $lt: to }
   if (atRisk) filter['feature.properties.atRisk'] = true
+  if (centerSphere)
+    filter['feature.geometry'] = {
+      $geoWithin: { $centerSphere: centerSphere },
+    }
   var features = await collection
     .find(filter, { projection: { _id: 0 } })
     .sort({ 'feature.properties.timestamp': -1 })
@@ -70,13 +83,29 @@ const searchFeatures = async function (db, options) {
  * Find all other location points that would have been at the same place and
  * time and mark them as at risk.
  */
-const markAtRisk = async function (db, feature) {
+const markAtRisk = async (db, feature) => {
+  // Options to get all features in the 10 meters radius of the infected feature
   const options = {
-    geoWithin: feature.geometry,
+    centerSphere: [feature.geometry.coordinates, 10 / 6378100],
   }
+
+  // Query features that could be at rist
   const features = await searchFeatures(db, options)
 
-  // TODO mark all reseived features as "atRisk"
+  // Set infected: true for them
+  const markedAsInfectedFeatures = features.map(feature => ({
+    ...feature,
+    properties: {
+      ...feature.properties,
+      infected: true,
+    },
+  }))
+
+  // Update all infected features
+  await bulkInsertFeatures(db, markedAsInfectedFeatures, requesterInfo)
+
+  // Notify all touched users
+  await notifyRelatedUsersAboutRiskByFeatures(markedAsInfectedFeatures)
 }
 
 module.exports = {

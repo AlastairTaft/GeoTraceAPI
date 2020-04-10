@@ -40,6 +40,13 @@ functions:
           path: /status
           method: GET
           cors: true
+  deleteMyData:
+    handler: server/index.deleteMyData
+    events: 
+      - http:
+          path: /delete-my-data
+          method: DELETE
+          cors: true
     
 custom:
   serverless-offline:

@@ -26,11 +26,23 @@ const getUserInfected = async function(db, uniqueId){
   var collection = db.collection('infected')
   // TODO Update when user has recovered
   var total = await collection.find({ uniqueId }).count()
-  console.log('getUserInfected#total', total)
   return total > 0
+}
+
+/**
+ * Remove all user data
+ * @param {MongoDB} db
+ * @param {string} uniqueId
+ * @returns {Promise}
+ */
+const removeUserData = async function(db, uniqueId){
+  var collection = db.collection('infected')
+  // TODO, Review. I don't think this can be SQL injected
+  return collection.remove({ uniqueId })
 }
 
 module.exports = {
   setUserInfected,
   getUserInfected,
+  removeUserData,
 }

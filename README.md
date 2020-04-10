@@ -115,5 +115,18 @@ Returns an object with the prop 'infected', e.g.
 }
 ```
 
+
+## /delete-my-data
+
+Delete all the user's data the server has.
+
+Method: Delete
+
+### Parameters
+| Name     | Type    | Required | Description |
+| -------- | ------- | -------- | ----------- |
+| uniqueId | String  | Yes      | The uniqueId identifying the user. |
+
+
 # License
 Fork it, hack it, repurpose it, do what you gotta do to aid in fighting the virus, but ensure what you do is ethical.

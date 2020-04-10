@@ -62,7 +62,6 @@ const submitLocationHistory = async event => {
     serverValidation.validateFeature(f)
     // If the user is infected, mark it as such
     var infected = await getUserInfected(db, f.properties['uniqueId'])
-    console.log('#infected', infected)
     f.properties['infected'] = infected
   }))
   await dbFeatures.bulkInsertFeatures(db, featureCollection.features, requesterInfo)
@@ -93,7 +92,7 @@ const getLocationHistory = async event => {
     db, 
     serverValidation.normaliseGetLocationInput(event.queryStringParameters),
   )
-  client.close()
+  await client.close()
   return {
     // Return a feature collection
     "type": "FeatureCollection",
@@ -125,10 +124,24 @@ const getStatus = async event => {
     db,
     event.queryStringParameters['unique-id']
   )
-  client.close()
+  await client.close()
   return {
     infected,
   }
+}
+
+/**
+ * Delete the user's data.
+ */
+const deleteMyData = async event => {
+  var uniqueId = event.queryStringParameters['unique-id']
+  if (!uniqueId)
+    throw new Error('Missing \'unique-id\' prop.')
+  var { db, client } = await getConnection()
+  await dbUsers.removeUserData(db, uniqueId)
+  await dbFeatures.removeUserFeatures(db, uniqueId)
+  await client.close()
+  return { 'ok': true }
 }
 
 module.exports = {
@@ -136,4 +149,5 @@ module.exports = {
   getLocationHistory: handleServerResponse(getLocationHistory),
   reportInfected: handleServerResponse(reportInfected),
   getStatus: handleServerResponse(getStatus),
+  deleteMyData: handleServerResponse(deleteMyData),
 }

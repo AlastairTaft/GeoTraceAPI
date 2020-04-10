@@ -67,6 +67,7 @@ const searchFeatures = async function(db, options){
     filter['feature.properties.timestamp'] = { $lt: to }
   if (atRisk)
     filter['feature.properties.atRisk'] = true
+
   var features = await collection.find(
     filter,
     {projection:{_id:0}},

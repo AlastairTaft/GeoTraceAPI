@@ -26,7 +26,6 @@ const getUserInfected = async function(db, uniqueId){
   var collection = db.collection('infected')
   // TODO Update when user has recovered
   var total = await collection.find({ uniqueId }).count()
-  console.log('getUserInfected#total', total)
   return total > 0
 }
 

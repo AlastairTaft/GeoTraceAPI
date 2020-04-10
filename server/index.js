@@ -62,7 +62,6 @@ const submitLocationHistory = async event => {
     serverValidation.validateFeature(f)
     // If the user is infected, mark it as such
     var infected = await getUserInfected(db, f.properties['uniqueId'])
-    console.log('#infected', infected)
     f.properties['infected'] = infected
   }))
   await dbFeatures.bulkInsertFeatures(db, featureCollection.features, requesterInfo)
@@ -93,7 +92,7 @@ const getLocationHistory = async event => {
     db, 
     serverValidation.normaliseGetLocationInput(event.queryStringParameters),
   )
-  client.close()
+  await client.close()
   return {
     // Return a feature collection
     "type": "FeatureCollection",

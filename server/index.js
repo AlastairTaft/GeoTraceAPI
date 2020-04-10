@@ -124,10 +124,24 @@ const getStatus = async event => {
     db,
     event.queryStringParameters['unique-id']
   )
-  client.close()
+  await client.close()
   return {
     infected,
   }
+}
+
+/**
+ * Delete the user's data.
+ */
+const deleteMyData = async event => {
+  var uniqueId = event.queryStringParameters['unique-id']
+  if (!uniqueId)
+    throw new Error('Missing \'unique-id\' prop.')
+  var { db, client } = await getConnection()
+  await dbUsers.removeUserData(db, uniqueId)
+  await dbFeatures.removeUserFeatures(db, uniqueId)
+  await client.close()
+  return { 'ok': true }
 }
 
 module.exports = {
@@ -135,4 +149,5 @@ module.exports = {
   getLocationHistory: handleServerResponse(getLocationHistory),
   reportInfected: handleServerResponse(reportInfected),
   getStatus: handleServerResponse(getStatus),
+  deleteMyData: handleServerResponse(deleteMyData),
 }

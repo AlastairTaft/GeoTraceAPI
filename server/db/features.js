@@ -68,6 +68,7 @@ const searchFeatures = async function(db, options){
   if (atRisk)
     filter['feature.properties.atRisk'] = true
 
+
   var features = await collection.find(
     filter,
     {projection:{_id:0}},
@@ -85,8 +86,20 @@ const markAtRisk = async function(db, feature){
   // TODO
 }
 
+/**
+ * Remove all user data
+ * @param {MongoDB} db
+ * @param {string} uniqueId
+ * @returns {Promise}
+ */
+const removeUserFeatures = async function(db, uniqueId){
+  var collection = db.collection('features')
+  return collection.remove({ 'feature.properties.uniqueId': uniqueId })
+}
+
 module.exports = {
   searchFeatures,
   bulkInsertFeatures,
   markAtRisk,
+  removeUserFeatures,
 }

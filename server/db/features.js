@@ -108,7 +108,7 @@ const markAtRisk = async (db, infectedFeature) => {
         ...feature,
         properties: {
           ...feature.properties,
-          infected: true,
+          atRisk: true,
         },
       })
     }

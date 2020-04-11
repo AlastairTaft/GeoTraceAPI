@@ -1,3 +1,5 @@
+const { TIME_TO_BECOME_INFECTED_MINUTES } = require('../const')
+
 /**
  * Bulk insert feature records.
  * @param {MongoDB} db
@@ -83,23 +85,35 @@ const searchFeatures = async function (db, options) {
  * Find all other location points that would have been at the same place and
  * time and mark them as at risk.
  */
-const markAtRisk = async (db, feature) => {
+const markAtRisk = async (db, infectedFeature) => {
   // Options to get all features in the 10 meters radius of the infected feature
   const options = {
-    centerSphere: [feature.geometry.coordinates, 10 / 6378100],
+    centerSphere: [infectedFeature.geometry.coordinates, 10 / 6378100],
   }
 
   // Query features that could be at rist
   const features = await searchFeatures(db, options)
 
   // Set infected: true for them
-  const markedAsInfectedFeatures = features.map(feature => ({
-    ...feature,
-    properties: {
-      ...feature.properties,
-      infected: true,
-    },
-  }))
+  const markedAsInfectedFeatures = features.reduce((acc, feature) => {
+    const { timestamp: infectedFeatureTimestamp } = infectedFeature.properties
+    const { timestamp: atRiskFeatureTimestamp } = feature.properties
+
+    const timeDiffInMinutes =
+      (atRiskFeatureTimestamp - infectedFeatureTimestamp) / 60000
+
+    // Only mark at risk if person visited contagious area within the 10 min window after infected person was there
+    if (timeDiff >= TIME_TO_BECOME_INFECTED_MINUTES) {
+      acc.push({
+        ...feature,
+        properties: {
+          ...feature.properties,
+          infected: true,
+        },
+      })
+    }
+    return acc
+  }, [])
 
   // Update all infected features
   await bulkInsertFeatures(db, markedAsInfectedFeatures, requesterInfo)

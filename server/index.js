@@ -74,11 +74,19 @@ const submitLocationHistory = async event => {
   var infectionPoints = featureCollection.features.map(
     f => f.properties.infected,
   )
-  await Promise.all(
-    infectionPoints.map(async feature => {
-      return dbFeatures.markAtRisk(feature)
-    }),
-  )
+
+  try {
+    await Promise.all(
+      infectionPoints.map(async feature => {
+        return dbFeatures.markAtRisk(feature)
+      }),
+    )
+  } catch (error) {
+    console.error(error)
+    console.log(
+      'The above error occured in submitLocationHistory() > dbFeatures.markAtRisk()',
+    )
+  }
 
   client.close()
 

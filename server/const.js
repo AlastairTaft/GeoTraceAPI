@@ -1,0 +1,5 @@
+const TIME_TO_BECOME_INFECTED_MINUTES = 10
+
+module.exports = {
+  TIME_TO_BECOME_INFECTED_MINUTES,
+}

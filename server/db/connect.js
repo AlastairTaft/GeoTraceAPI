@@ -3,7 +3,7 @@ const MongoClient = require('mongodb').MongoClient
 /**
  * Convience function for connecting to the Mongo DB.
  */
-const getConnection = async function(){
+const getConnection = async function () {
   const url = process.env.MONGO_URL
   const dbName = process.env.MONGO_DATABASE
   const client = new MongoClient(url)

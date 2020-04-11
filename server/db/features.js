@@ -1,9 +1,10 @@
+const { TIME_TO_BECOME_INFECTED_MINUTES } = require('../const')
 
 /**
  * Bulk insert feature records.
  * @param {MongoDB} db
  * @param {Array<GeoJSONFeature>} features
- * @param {object} requesterInfo Stored along side the feature, used as a 
+ * @param {object} requesterInfo Stored along side the feature, used as a
  * retroactive protection against abuse, can remove records added by the
  * same IP, etc.
  * @returns {Promise}
@@ -15,16 +16,18 @@ const bulkInsertFeatures = (db, features, requesterInfo) => {
       'feature.properties.uniqueId': feature.properties.uniqueId,
       'feature.properties.timestamp': feature.properties.timestamp,
     }
-    return { 
-      updateOne: { 
+    return {
+      updateOne: {
         filter,
-        update: {$set: {
-          feature,
-          requesterInfo,
-          updatedAt: (new Date()).valueOf(),
-        }}, 
-        upsert: true 
-      } 
+        update: {
+          $set: {
+            feature,
+            requesterInfo,
+            updatedAt: new Date().valueOf(),
+          },
+        },
+        upsert: true,
+      },
     }
   })
   return collection.bulkWrite(operations)
@@ -42,13 +45,14 @@ const bulkInsertFeatures = (db, features, requesterInfo) => {
  * @param {boolean} atRisk If true only search for records marked as 'at risk'
  * @returns {Promise<Array<GeoJSONFeature>>}
  */
-const searchFeatures = async function(db, options){
-  var { 
-    geoWithin, 
-    skip = 0, 
-    limit = 500, 
+const searchFeatures = async function (db, options) {
+  var {
+    geoWithin,
+    centerSphere,
+    skip = 0,
+    limit = 500,
     from,
-    to, 
+    to,
     uniqueId,
     atRisk,
   } = options
@@ -58,20 +62,21 @@ const searchFeatures = async function(db, options){
     'feature.properties.uniqueId': uniqueId,
   }
   if (geoWithin)
-    filter['feature.geometry'] = { 
-      $geoWithin: { $geometry: geoWithin } 
-    } 
-  if (from)
-    filter['feature.properties.timestamp'] = { $gte: from }
-  if (to)
-    filter['feature.properties.timestamp'] = { $lt: to }
-  if (atRisk)
-    filter['feature.properties.atRisk'] = true
-  var features = await collection.find(
-    filter,
-    {projection:{_id:0}},
-  )
-  .sort({'feature.properties.timestamp': -1}).skip(skip).limit(limit) 
+    filter['feature.geometry'] = {
+      $geoWithin: { $geometry: geoWithin },
+    }
+  if (from) filter['feature.properties.timestamp'] = { $gte: from }
+  if (to) filter['feature.properties.timestamp'] = { $lt: to }
+  if (atRisk) filter['feature.properties.atRisk'] = true
+  if (centerSphere)
+    filter['feature.geometry'] = {
+      $geoWithin: { $centerSphere: centerSphere },
+    }
+  var features = await collection
+    .find(filter, { projection: { _id: 0 } })
+    .sort({ 'feature.properties.timestamp': -1 })
+    .skip(skip)
+    .limit(limit)
   var features = await features.toArray()
   return features.map(f => f.feature)
 }
@@ -80,8 +85,41 @@ const searchFeatures = async function(db, options){
  * Find all other location points that would have been at the same place and
  * time and mark them as at risk.
  */
-const markAtRisk = async function(db, feature){
-  // TODO
+const markAtRisk = async (db, infectedFeature) => {
+  // Options to get all features in the 10 meters radius of the infected feature
+  const options = {
+    centerSphere: [infectedFeature.geometry.coordinates, 10 / 6378100],
+  }
+
+  // Query features that could be at rist
+  const features = await searchFeatures(db, options)
+
+  // Set infected: true for them
+  const markedAsInfectedFeatures = features.reduce((acc, feature) => {
+    const { timestamp: infectedFeatureTimestamp } = infectedFeature.properties
+    const { timestamp: atRiskFeatureTimestamp } = feature.properties
+
+    const timeDiffInMinutes =
+      (atRiskFeatureTimestamp - infectedFeatureTimestamp) / 60000
+
+    // Only mark at risk if person visited contagious area within the 10 min window after infected person was there
+    if (timeDiff >= TIME_TO_BECOME_INFECTED_MINUTES) {
+      acc.push({
+        ...feature,
+        properties: {
+          ...feature.properties,
+          atRisk: true,
+        },
+      })
+    }
+    return acc
+  }, [])
+
+  // Update all infected features
+  await bulkInsertFeatures(db, markedAsInfectedFeatures, requesterInfo)
+
+  // Notify all touched users
+  await notifyRelatedUsersAboutRiskByFeatures(markedAsInfectedFeatures)
 }
 
 module.exports = {

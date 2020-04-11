@@ -1,4 +1,4 @@
-var memoize = require("memoizee")
+var memoize = require('memoizee')
 var { getConnection } = require('./db/connect')
 var { handleServerResponse } = require('./server/server')
 var { ServerError } = require('./server/errors')
@@ -7,12 +7,9 @@ var dbFeatures = require('./db/features')
 var dbUsers = require('./db/users')
 var serverValidation = require('./server/validation')
 
-var getUserInfected = memoize(
-  dbUsers.getUserInfected,
-  {
-    normalizer: (db, uniqueId) => uniqueId
-  },
-)
+var getUserInfected = memoize(dbUsers.getUserInfected, {
+  normalizer: (db, uniqueId) => uniqueId,
+})
 
 /**
  * Accept a Geo JSON FeatureCollection as the request body
@@ -35,12 +32,11 @@ var getUserInfected = memoize(
  *   ]
  * }
  * ```
- * 
+ *
  * Find the number of households in a polygon area.
  */
 const submitLocationHistory = async event => {
-  if (!event.body)
-    throw new ServerError('Missing body content.', 400)
+  if (!event.body) throw new ServerError('Missing body content.', 400)
 
   var { requestTimeEpoch, requestId, identity } = event.requestContext
   var { sourceIp, userAgent } = identity
@@ -52,34 +48,52 @@ const submitLocationHistory = async event => {
     sourceIp,
     userAgent,
   }
-  
+
   var featureCollection = new FeatureCollection()
   featureCollection.parse(JSON.parse(event.body))
   var { db, client } = await getConnection()
 
   // Validate features
-  await Promise.all(featureCollection.features.map(async f => {
-    serverValidation.validateFeature(f)
-    // If the user is infected, mark it as such
-    var infected = await getUserInfected(db, f.properties['uniqueId'])
-    console.log('#infected', infected)
-    f.properties['infected'] = infected
-  }))
-  await dbFeatures.bulkInsertFeatures(db, featureCollection.features, requesterInfo)
+  await Promise.all(
+    featureCollection.features.map(async f => {
+      serverValidation.validateFeature(f)
+      // If the user is infected, mark it as such
+      var infected = await getUserInfected(db, f.properties['uniqueId'])
+      console.log('#infected', infected)
+      f.properties['infected'] = infected
+    }),
+  )
+  await dbFeatures.bulkInsertFeatures(
+    db,
+    featureCollection.features,
+    requesterInfo,
+  )
 
   // If any location features are marked as infected need to do the contact
   // tracing
-  var infectionPoints = featureCollection.features.map(f => f.properties.infected)
-  await Promise.all(infectionPoints.map(async feature => {
-    return dbFeatures.markAtRisk(feature)
-  }))
+  var infectionPoints = featureCollection.features.map(
+    f => f.properties.infected,
+  )
+
+  try {
+    await Promise.all(
+      infectionPoints.map(async feature => {
+        return dbFeatures.markAtRisk(feature)
+      }),
+    )
+  } catch (error) {
+    console.error(error)
+    console.log(
+      'The above error occured in submitLocationHistory() > dbFeatures.markAtRisk()',
+    )
+  }
 
   client.close()
 
   return {
-    // As a convenience return some valid JSON so that client's don't 
+    // As a convenience return some valid JSON so that client's don't
     // fall over trying to parse the response.
-    "all good": "👌"
+    'all good': '👌',
   }
 }
 
@@ -90,13 +104,13 @@ const getLocationHistory = async event => {
   serverValidation.validateGetLocationInput(event.queryStringParameters)
   var { db, client } = await getConnection()
   var features = await dbFeatures.searchFeatures(
-    db, 
+    db,
     serverValidation.normaliseGetLocationInput(event.queryStringParameters),
   )
   client.close()
   return {
     // Return a feature collection
-    "type": "FeatureCollection",
+    'type': 'FeatureCollection',
     features,
   }
 }
@@ -119,11 +133,11 @@ const reportInfected = async event => {
  */
 const getStatus = async event => {
   if (!event.queryStringParameters['unique-id'])
-    throw new Error('Missing \'unique-id\' prop.')
+    throw new Error("Missing 'unique-id' prop.")
   var { db, client } = await getConnection()
   var infected = await dbUsers.getUserInfected(
     db,
-    event.queryStringParameters['unique-id']
+    event.queryStringParameters['unique-id'],
   )
   client.close()
   return {

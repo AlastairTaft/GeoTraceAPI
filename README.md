@@ -10,67 +10,25 @@ There is a production ready app that consumes this backend [here](https://github
 
 # API 
 
-## /location-history
+## /submit-risk-map
 
-Get location data for COVID-19 patients.
-
-Method: GET
-
-### Parameters
-| Name       | Required | Description |
-| ---------- | -------- | ----------- |
-| geo-within | No       | A valid [Geo JSON geometry object](https://tools.ietf.org/html/rfc7946#section-3.1) |
-| uniqueId   | Yes      | The unique reference id identifiying the user. |
-| skip       | No       | An integer, skip the first n records | 
-| limit      | No       | Get up to this many records back, max limit is 500 | 
-| from       | No       | Get records after this EPOCH. |
-| to         | No       | Get records before this EPOCH. |
-| at-risk    | No       | Only returns records that are marked as at risk. i.e. have come in close proximity to a COVID-19 positive person. |
-
-Returns a [Geo JSON FeatureCollection](https://tools.ietf.org/html/rfc7946#section-3.3) Sorted by feature timestamp in descending order.
-
-Example url path.
-```
-/location-history?uniqueId=test&geo-within=%7B%22type%22%3A%22Polygon%22%2C%22coordinates%22%3A%5B%5B%5B100%2C-20%5D%2C%5B110%2C-20%5D%2C%5B110%2C-30%5D%2C%5B100%2C-30%5D%2C%5B100%2C-20%5D%5D%5D%7D
-```
-
-## /submit-location-history
-
-Submit location history. All location history must be stored as a [GeoJSON Feature Collection](https://tools.ietf.org/html/rfc7946#section-3.3).
+Submit risk hashes. These are encrypted location points used to build a risk map.
 
 Method: POST
 
 ### Parameters
-| Name     | Required | Description |
-| -------- | -------- | ----------- |
-| type     | Yes      | Accepts only a value of "FeatureCollection" |
-| features | Yes      | An array of [Geo JSON Feature](https://tools.ietf.org/html/rfc7946#section-3.2) records | 
-
-#### Properties
-Values that can be populated on the Feature properties object.
-
-| Name      | Type    | Required | Description |
-| ----      | ------- | -------- | ----------- |
-| infected  | Boolean | No       | True if the person this location history is linked to has COVID-19 |
-| timestamp | Integer | Yes      | The timestamp of location point. |
-| uniqueId  | String  | Yes      | The, unguessable, unique id only known by the reporting user. |
+| Name                              | Required | Description |
+| --------------------------------- | -------- | ----------- |
+| uniqueId                          | Yes      | Uniquely identifies this device, only known to the device |
+| hashes[0].hash                    | Yes      | The hash that identifies this risk point |
+| hashes[0].timePassedSinceExposure | Yes      | (In milliseconds) The time that has elapsed since this user visited the location | 
 
 e.g.
 ```json
 {
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          50.123,
-          51.321,
-          0
-        ]
-      }
-    }
+  "uniqueId": "xyz123",
+  "hashes": [
+    { "hash": "abc987", "timePassedSinceExposure": 300000 }
   ]
 }
 ```
@@ -98,7 +56,7 @@ e.g.
 
 ## /status
 
-Get the user status, i.e. whether or not they are infected.
+Get the user status, i.e. whether or not they are at risk.
 
 Method: Get
 
@@ -115,5 +73,25 @@ Returns an object with the prop 'infected', e.g.
 }
 ```
 
-# License
-Fork it, hack it, repurpose it, do what you gotta do to aid in fighting the virus, but ensure what you do is ethical.
+## /get-salt
+
+NOTE: This endpoint needs to be deployed on an independent server, not the central server.
+Ask the server for a unique salt. This can only be called approximately once per hour.
+
+Method: POST
+
+
+### Parameters
+| Name               | Required | Description |
+| ------------------ | -------- | ----------- |
+| seeds[0].seed      | Yes      | The salted hash that identifies this risk point |
+| seeds[0].timestamp | Yes      | The timestamp of the risk point. If this is approx more than an hour in the past the server will throw an error. | 
+
+e.g.
+```json
+{
+  "seeds": [
+    { "seed": "xyz", "timestamp": 1586068927222 }
+  ]
+}
+```

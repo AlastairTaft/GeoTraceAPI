@@ -32,7 +32,7 @@ const getUserInfected = async function (db, uniqueId) {
   return total > 0
 }
 
-const notifyRelatedUsersAboutRiskByFeatures = async features => {
+const notifyRelatedUsersAboutRisk = async features => {
   // For each received feature but only 1 per user
   // Generate message that will contain date and readable location when user encountered virus
 }

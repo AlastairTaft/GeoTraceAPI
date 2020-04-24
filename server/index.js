@@ -17,14 +17,9 @@ var getUserInfected = memoize(dbUsers.getUserInfected, {
  */
 const submitRiskMap = async event => {
   if (!event.body) throw new ServerError('Missing body content.', 400)
-
   var { uniqueId, hashes } = JSON.parse(event.body)
-
   var { db, client } = await getConnection()
-
-
   var riskMapCollection = db.collection('riskMap')
-  
   await riskMap.bulkInsert(
     riskMapCollection,
     hashes.map(({ hash, timePassedSinceExposure }) => ({
@@ -33,9 +28,7 @@ const submitRiskMap = async event => {
       timePassedSinceExposure,
     }))
   )
-
   client.close()
-
   // TODO Return user status
   return {
     // As a convenience return some valid JSON so that client's don't
@@ -50,8 +43,9 @@ const submitRiskMap = async event => {
  */
 const reportInfected = async event => {
   serverValidation.validateReportInfectedInput(event)
-  var { uniqueId, timestampShowingSymptoms } = JSON.parse(event.body)
+  var { uniqueId, code } = JSON.parse(event.body)
   var { db, client } = await getConnection()
+  // TODO Validte it is a real code but for testing will allow it through
   await dbUsers.setUserInfected(db, uniqueId, timestampShowingSymptoms)
   // TODO Mark all relevant records as atRisk
   client.close()

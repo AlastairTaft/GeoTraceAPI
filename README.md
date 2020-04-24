@@ -40,23 +40,23 @@ Report the user is diagnosed with COVID-19.
 Method: PUT
 
 ### Parameters
-| Name                       | Type    | Required | Description |
-| -------------------------- | ------- | -------- | ----------- |
-| uniqueId                  | String  | Yes      | The uniqueId identifying the user. |
-| timestamp-showing-symptoms | Integer | Yes      | At what point did the user start seeing symptoms. a UNIX Epoch. |
+| Name     | Type   | Required | Description |
+| -------- | ------ | -------- | ----------- |
+| uniqueId | String | Yes      | The uniqueId identifying the user. |
+| code     | String | Yes      | The code proving this is a valid report, provided by a health authority as a QR code. |
 
 e.g.
 
 ```json
 {
   "uniqueId": "xyz123",
-  "timestampShowingSymptoms": 1586068927222
+  "code": "health-code-123"
 }
 ```
 
 ## /status
 
-Get the user status, i.e. whether or not they are at risk.
+Get the user status, i.e. whether or not they are at risk or infected
 
 Method: Get
 
@@ -65,11 +65,12 @@ Method: Get
 | -------- | ------- | -------- | ----------- |
 | uniqueId | String  | Yes      | The uniqueId identifying the user. |
 
-Returns an object with the prop 'infected', e.g.
+Returns an object with the prop 'infected' and 'atRisk', e.g.
 
 ```json
 {
-  "infected": false
+  "infected": false,
+  "atRisk": false
 }
 ```
 

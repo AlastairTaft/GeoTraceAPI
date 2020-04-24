@@ -91,16 +91,22 @@ const validateReportInfectedInput = function(event){
   } catch (error){
     throw new Error('Cannot parse body of request.')
   }
-  var { uniqueId, timestampShowingSymptoms } = body
+  var { 
+    uniqueId, 
+    /*timestampShowingSymptoms*/ 
+    code,
+  } = body
   if (!uniqueId)
     throw new Error('Missing parameter \'uniqueId\'.')
-  if (!timestampShowingSymptoms)
+  /*if (!timestampShowingSymptoms)
     throw new Error('Missing parameter \'timestampShowingSymptoms\'.')
   timestampShowingSymptoms = Number(timestampShowingSymptoms)
   if (Number.isInteger(timestampShowingSymptoms) == false)
     throw new Error('Invalid \'timestampShowingSymptoms\' param.')
   if (isNaN(new Date(timestampShowingSymptoms)))
-    throw new Error('Invalid \'timestampShowingSymptoms\' param.')
+    throw new Error('Invalid \'timestampShowingSymptoms\' param.')*/
+  if (!code)
+    throw new Error('Missing parameter \'code\'.')
 }
 
 module.exports = {

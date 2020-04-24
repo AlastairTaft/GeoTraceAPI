@@ -13,18 +13,11 @@ plugins:
   - serverless-domain-manager
 functions:
   submitLocationHistory:
-    handler: server/index.submitLocationHistory
+    handler: server/index.submitRiskMap
     events: 
       - http:
-          path: /submit-location-history
+          path: /submit-risk-map
           method: POST
-          cors: true
-  getLocationHistory:
-    handler: server/index.getLocationHistory
-    events: 
-      - http:
-          path: /location-history
-          method: GET
           cors: true
   reportInfected:
     handler: server/index.reportInfected
@@ -39,6 +32,13 @@ functions:
       - http:
           path: /status
           method: GET
+          cors: true
+  getSalt:
+    handler: server/index.getSalt
+    events: 
+      - http:
+          path: /get-salt
+          method: POST
           cors: true
     
 custom:

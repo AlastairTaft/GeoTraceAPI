@@ -1,95 +1,42 @@
 var memoize = require('memoizee')
 var { getConnection } = require('./db/connect')
-var { handleServerResponse } = require('./server/server')
+var { handleServerResponse, rateLimit } = require('./server/server')
 var { ServerError } = require('./server/errors')
-var FeatureCollection = require('./geojson/FeatureCollection')
-var dbFeatures = require('./db/features')
+var riskMap = require('./db/riskMap')
 var dbUsers = require('./db/users')
 var serverValidation = require('./server/validation')
+var { hashString } = require('./misc/crypto')
+var riskMap = require('./db/riskMap')
 
 var getUserInfected = memoize(dbUsers.getUserInfected, {
   normalizer: (db, uniqueId) => uniqueId,
 })
 
 /**
- * Accept a Geo JSON FeatureCollection as the request body
- * e.g.
- * ```
- * {
- *   "type": "FeatureCollection",
- *   "features": [
- *    {
- *      "type": "Feature",
- *      "geometry": {
- *        "type": "Point",
- *        "coordinates": [
- *          50.123,
- *          51.321,
- *          0
- *        ]
- *      }
- *    }
- *   ]
- * }
- * ```
- *
- * Find the number of households in a polygon area.
+ * Submit risk hashes
  */
-const submitLocationHistory = async event => {
+const submitRiskMap = async event => {
   if (!event.body) throw new ServerError('Missing body content.', 400)
 
-  var { requestTimeEpoch, requestId, identity } = event.requestContext
-  var { sourceIp, userAgent } = identity
+  var { uniqueId, hashes } = JSON.parse(event.body)
 
-  // We can use this info to debug API abuse and to remove bad data.
-  var requesterInfo = {
-    requestTimeEpoch,
-    requestId,
-    sourceIp,
-    userAgent,
-  }
-
-  var featureCollection = new FeatureCollection()
-  featureCollection.parse(JSON.parse(event.body))
   var { db, client } = await getConnection()
 
-  // Validate features
-  await Promise.all(
-    featureCollection.features.map(async f => {
-      serverValidation.validateFeature(f)
-      // If the user is infected, mark it as such
-      var infected = await getUserInfected(db, f.properties['uniqueId'])
-      console.log('#infected', infected)
-      f.properties['infected'] = infected
-    }),
-  )
-  await dbFeatures.bulkInsertFeatures(
-    db,
-    featureCollection.features,
-    requesterInfo,
-  )
 
-  // If any location features are marked as infected need to do the contact
-  // tracing
-  var infectionPoints = featureCollection.features.map(
-    f => f.properties.infected,
+  var riskMapCollection = db.collection('riskMap')
+  
+  await riskMap.bulkInsert(
+    riskMapCollection,
+    hashes.map(({ hash, timePassedSinceExposure }) => ({
+      uniqueId,
+      hash,
+      timePassedSinceExposure,
+    }))
   )
-
-  try {
-    await Promise.all(
-      infectionPoints.map(async feature => {
-        return dbFeatures.markAtRisk(feature)
-      }),
-    )
-  } catch (error) {
-    console.error(error)
-    console.log(
-      'The above error occured in submitLocationHistory() > dbFeatures.markAtRisk()',
-    )
-  }
 
   client.close()
 
+  // TODO Return user status
   return {
     // As a convenience return some valid JSON so that client's don't
     // fall over trying to parse the response.
@@ -97,23 +44,6 @@ const submitLocationHistory = async event => {
   }
 }
 
-/**
- * Get location history
- */
-const getLocationHistory = async event => {
-  serverValidation.validateGetLocationInput(event.queryStringParameters)
-  var { db, client } = await getConnection()
-  var features = await dbFeatures.searchFeatures(
-    db,
-    serverValidation.normaliseGetLocationInput(event.queryStringParameters),
-  )
-  client.close()
-  return {
-    // Return a feature collection
-    'type': 'FeatureCollection',
-    features,
-  }
-}
 
 /**
  * Mark user has been diagnosed with COVID-19.
@@ -145,9 +75,47 @@ const getStatus = async event => {
   }
 }
 
+/**
+ * Get a salt to further encrypt data.
+ */
+const getSalt = async event => {
+  var { seeds } = JSON.parse(event.body)
+
+  var results = seeds.map(({ seed, timestamp }) => {
+    try {
+      if (typeof timestamp !== 'number')
+        throw new Error('Invalid timestamp.')
+      var cutOffTime = (1000 * 60 * 60) * 1.5
+      var now = (new Date()).valueOf()
+      // We log areas at risk for up to 9 hours in the future
+      if (timestamp > (now + (1000 * 60 * 60 * 9)))
+        throw new Error('Invalid timestamp.')
+      if ((now - timestamp) > cutOffTime)
+        throw new Error('Expired timestamp.')
+    } catch (error){
+      return {
+        success: false,
+        error: {
+          message: error.message, 
+        },
+      }
+    }
+    var hash = hashString(seed + '-' + timestamp)
+    return {
+      success: true,
+      hash,
+    }
+  })
+  return { hashes: results }
+}
+
 module.exports = {
-  submitLocationHistory: handleServerResponse(submitLocationHistory),
-  getLocationHistory: handleServerResponse(getLocationHistory),
+  submitRiskMap: handleServerResponse(submitRiskMap),
   reportInfected: handleServerResponse(reportInfected),
   getStatus: handleServerResponse(getStatus),
+  getSalt: rateLimit(
+    handleServerResponse(getSalt), 
+    Number(process.env.RATE_LIMIT_INTERVAL)
+  ),
 }
+//1000 * 60 * 60 * 1.5

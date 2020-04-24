@@ -1,4 +1,6 @@
 var { ServerError } = require('./errors')
+var { getRequest, markRequest } = require('./../db/requests')
+var { getConnection } = require('./../db/connect')
 
 /**
  * Do boiler plate server response handling.
@@ -45,6 +47,42 @@ const handleServerResponse = handler => async (...args) => {
   }
 }
 
+/**
+ * Rate limit that an IP can only make one request per time interval.
+ */
+const rateLimit = (handler, timeInterval) => async (...args) => {
+  // Ensure each IP can only call once per time interval
+  var { requestTimeEpoch, requestId, identity } = args[0].requestContext
+  var { sourceIp, userAgent } = identity
+
+
+  var { db, client } = await getConnection()
+  var collection = db.collection('requests')
+  var lastRequest = await getRequest(collection, sourceIp)
+  if (lastRequest && 
+    ((requestTimeEpoch - lastRequest.timestamp) < timeInterval)
+  ){
+    await client.close()
+    return {
+      statusCode:  429,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+        'Access-Control-Allow-Methods': 'POST,OPTIONS',
+        'Access-Control-Allow-Headers':
+          'Content-Type, Content-Encoding',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message: 'To many request.' }),
+    }
+  }
+  await markRequest(collection, sourceIp, requestTimeEpoch)
+  await client.close()
+
+  return handler(...args)
+}
+
 module.exports = {
   handleServerResponse,
+  rateLimit,
 }

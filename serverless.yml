@@ -8,7 +8,7 @@ provider:
     NODE_ENV: ${self:provider.stage}
     MONGO_URL: ${env:MONGO_URL}
     MONGO_DATABASE: ${env:MONGO_DATABASE}
-    SECRET: ${self:custom.self:stage.SECRET}
+    SECRET: ${self:custom.${self:provider.stage}.SECRET}
 plugins:
   - serverless-offline
   - serverless-domain-manager
@@ -46,7 +46,7 @@ custom:
   serverless-offline:
     port: 5001
   customDomain:
-    domainName: ${self:custom.self:stage.domainName}
+    domainName: ${self:custom.${self:provider.stage}.domainName}
     basePath: ''
     stage: ${self:provider.stage}
     certificateName: '*.geotrace.io'

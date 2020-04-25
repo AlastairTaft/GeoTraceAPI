@@ -3,7 +3,7 @@ provider:
   name: aws
   runtime: nodejs12.x
   stage: ${env:STAGE, 'dev'}
-  region: ${env:AWS_REGION}
+  region: eu-central-1
   environment:
     NODE_ENV: ${self:provider.stage}
     MONGO_URL: ${env:MONGO_URL}

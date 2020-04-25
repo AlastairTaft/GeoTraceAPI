@@ -1,13 +1,14 @@
-service: au-tas-track-covid-19-spread
+service: geo-trace-api
 provider:
   name: aws
   runtime: nodejs12.x
-  stage: ${opt:stage, 'dev'}
+  stage: ${env:stage, 'dev'}
   region: us-east-1
   environment:
     NODE_ENV: ${self:provider.stage}
     MONGO_URL: ${env:MONGO_URL}
     MONGO_DATABASE: ${env:MONGO_DATABASE}
+    SECRET: ${self:custom.${self:provider.stage}.SECRET}
 plugins:
   - serverless-offline
   - serverless-domain-manager
@@ -45,7 +46,34 @@ custom:
   serverless-offline:
     port: 5001
   customDomain:
-    domainName: au-tas-api.trackcovid19spread.com
+    domainName: ${self:custom.${self:provider.stage}.domainName}
     basePath: ''
-    certificateName: '*.trackcovid19spread.com'
+    certificateName: '*.geotrace.io'
     createRoute53Record: true
+  production:
+    domainName: api.geotrace.io
+    AWS_REGION: eu-central-1
+  salt1:
+    domainName: salt1.geotrace.io
+    SECRET: ${env:SALT1_SECRET}
+  salt2:
+    domainName: salt2.geotrace.io
+    SECRET: ${env:SALT2_SECRET}
+  salt3:
+    domainName: salt3.geotrace.io
+    SECRET: ${env:SALT3_SECRET}
+  salt4:
+    domainName: salt4.geotrace.io
+    SECRET: ${env:SALT4_SECRET}
+  salt5:
+    domainName: salt5.geotrace.io
+    SECRET: ${env:SALT5_SECRET}
+  salt6:
+    domainName: salt6.geotrace.io
+    SECRET: ${env:SALT6_SECRET}
+  salt7:
+    domainName: salt7.geotrace.io
+    SECRET: ${env:SALT7_SECRET}
+  salt8:
+    domainName: salt8.geotrace.io
+    SECRET: ${env:SALT8_SECRET}

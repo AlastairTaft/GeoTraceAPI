@@ -1,12 +1,16 @@
 var memoize = require('memoizee')
+var moment = require('moment')
 var { getConnection } = require('./db/connect')
 var { handleServerResponse, rateLimit } = require('./server/server')
 var { ServerError } = require('./server/errors')
 var riskMap = require('./db/riskMap')
 var dbUsers = require('./db/users')
+var dbAuthorities = require('./db/authorities')
+var dbAnalysisReports = require('./db/analysisReports')
 var serverValidation = require('./server/validation')
 var { hashString } = require('./misc/crypto')
-var riskMap = require('./db/riskMap')
+
+require('dotenv').config()
 
 var getUserInfected = memoize(dbUsers.getUserInfected, {
   normalizer: (db, uniqueId) => uniqueId,
@@ -109,6 +113,54 @@ const getSalt = async event => {
   return { hashes: results }
 }
 
+/**
+ * Allows an authority to report an analysis
+ * @return {Promise<string>} Id of the report
+ */
+const reportAnalysis = async event => {
+  let authorization = event.headers['authorization']
+  if (!authorization) throw new ServerError("Missing header 'authorization'", 400)
+
+  let { date } = JSON.parse(event.body)
+  date = moment(date)
+  if (!date.isValid()) throw new ServerError("Missing or invalid 'date' prop.", 400)
+
+  const { db, client } = await getConnection()
+
+  // TODO: Improve authorization mechanism. Current weak implementation is for hackathon demo purposes
+  const valid = await dbAuthorities.validToken(db, authorization)
+  if(!valid) throw new ServerError("The authority is not valid'", 400)
+
+  const reportId = await dbAnalysisReports.saveReport(db, date)
+    .catch(() => {
+      throw new ServerError("Something went wrong reporting the analysis", 500)
+    })
+
+  client.close()
+
+  return reportId
+}
+
+/**
+ * Check the analysis report
+ * @return {Promise<string>} Analysis report
+ */
+const checkAnalysisReport = async event => {
+  const uuid = event.queryStringParameters && event.queryStringParameters['uuid']
+  if (!uuid) throw new ServerError("Missing 'uuid' prop.", 400)
+
+  const { db, client } = await getConnection()
+
+  const reportId = await dbAnalysisReports.getReport(db, uuid)
+    .catch(() => {
+      throw new ServerError("Something went wrong getting the analysis report", 500)
+    })
+
+  client.close()
+
+  return reportId
+}
+
 module.exports = {
   submitRiskMap: handleServerResponse(submitRiskMap),
   reportInfected: handleServerResponse(reportInfected),
@@ -117,5 +169,7 @@ module.exports = {
     handleServerResponse(getSalt), 
     Number(process.env.RATE_LIMIT_INTERVAL)
   ),
+  reportAnalysis: handleServerResponse(reportAnalysis),
+  checkAnalysisReport: handleServerResponse(checkAnalysisReport),
 }
 //1000 * 60 * 60 * 1.5

@@ -95,3 +95,52 @@ e.g.
   ]
 }
 ```
+
+## /report-analysis
+
+NOTE: The verification of authority should be improved with an TLS challenge or a proper bearer token authentication.
+Allows an Authority to report an analysis, so the user can scan it and be allowed to upload the location data
+
+Method: POST
+
+### Header
+| Name          | Required | Description |
+| --------------| -------- | ----------- |
+| authorization | Yes      | Valid token stored in database |
+
+### Parameters
+| Name | Required | Description |
+| -----| -------- | ----------- |
+| date | Yes      | Date of the analysis result |
+
+e.g.
+```json
+{
+  "date": "Sat Apr 25 2020 16:29:42 GMT+0200"
+}
+```
+
+Returns the UUID of the report
+e.g. `8765-0831-94`
+
+
+## /check-analysis-report
+
+Check the information about the analysis report.
+
+Method: Get
+
+### Parameters
+| Name | Required | Description |
+| -----| -------- | ----------- |
+| uuid | Yes      | UUID of the analysis report (stored in QR code) |
+
+Returns an object with the analysis report data
+
+```json
+{
+  "uuid": "8765-0831-94",
+  "date": "2020-04-25T15:38:42.672Z",
+  "used": false
+}
+```

@@ -2,3 +2,4 @@ secrets.txt
 node_modules
 .DS_Store
 .serverless
+.idea

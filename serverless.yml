@@ -35,10 +35,24 @@ functions:
           cors: true
   getSalt:
     handler: server/index.getSalt
-    events: 
+    events:
       - http:
           path: /get-salt
           method: POST
+          cors: true
+  reportAnalysis:
+    handler: server/index.reportAnalysis
+    events:
+      - http:
+          path: /report-analysis
+          method: POST
+          cors: true
+  checkAnalysisReport:
+    handler: server/index.checkAnalysisReport
+    events:
+      - http:
+          path: /check-analysis-report
+          method: GET
           cors: true
     
 custom:

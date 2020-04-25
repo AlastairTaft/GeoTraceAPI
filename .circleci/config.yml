@@ -75,57 +75,57 @@ workflows:
               only:
                 - production
       - salt1-publish:
-          requires:
-            - production-approval
+          #requires:
+          #  - production-approval
           filters:
             branches:
               only:
                 - test-salts
       - salt2-publish:
-          requires:
-            - production-approval
+          #requires:
+          #  - production-approval
           filters:
             branches:
               only:
                 - production
       - salt3-publish:
-          requires:
-            - production-approval
+          #requires:
+          #  - production-approval
           filters:
             branches:
               only:
                 - production
       - salt4-publish:
-          requires:
-            - production-approval
+          #requires:
+          #  - production-approval
           filters:
             branches:
               only:
                 - production
       - salt5-publish:
-          requires:
-            - production-approval
+          #requires:
+          #  - production-approval
           filters:
             branches:
               only:
                 - production
       - salt6-publish:
-          requires:
-            - production-approval
+          #requires:
+          #  - production-approval
           filters:
             branches:
               only:
                 - production
       - salt7-publish:
-          requires:
-            - production-approval
+          #requires:
+          #  - production-approval
           filters:
             branches:
               only:
                 - production
       - salt8-publish:
-          requires:
-            - production-approval
+          #requires:
+          #  - production-approval
           filters:
             branches:
               only:

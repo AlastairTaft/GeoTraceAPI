@@ -53,7 +53,6 @@ custom:
     createRoute53Record: true
   production:
     domainName: api.geotrace.io
-    AWS_REGION: eu-central-1
   salt1:
     domainName: salt1.geotrace.io
     SECRET: ${env:SALT1_SECRET}

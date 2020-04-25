@@ -23,47 +23,38 @@ jobs:
   production-publish:
     environment:
       STAGE: production
-      AWS_REGION: eu-central-1
     <<: *publish
   salt1-publish:
     environment:
       STAGE: salt1
-      AWS_REGION: eu-west-1
     <<: *publish
   salt2-publish:
     environment:
       STAGE: salt2
-      AWS_REGION: eu-west-3
     <<: *publish
   salt3-publish:
     environment:
       STAGE: salt3
-      AWS_REGION: eu-north-1
     <<: *publish
   salt4-publish:
     environment:
       STAGE: salt4
-      AWS_REGION: eu-central-1
     <<: *publish
   salt5-publish:
     environment:
       STAGE: salt5
-      AWS_REGION: eu-west-1
     <<: *publish
   salt6-publish:
     environment:
       STAGE: salt6
-      AWS_REGION: eu-west-3
     <<: *publish
   salt7-publish:
     environment:
       STAGE: salt7
-      AWS_REGION: eu-north-1
     <<: *publish
   salt8-publish:
     environment:
       STAGE: salt8
-      AWS_REGION: eu-central-1
     <<: *publish
 
 workflows:

@@ -87,46 +87,46 @@ workflows:
           filters:
             branches:
               only:
-                - production
+                - test-salts
       - salt3-publish:
           #requires:
           #  - production-approval
           filters:
             branches:
               only:
-                - production
+                - test-salts
       - salt4-publish:
           #requires:
           #  - production-approval
           filters:
             branches:
               only:
-                - production
+                - test-salts
       - salt5-publish:
           #requires:
           #  - production-approval
           filters:
             branches:
               only:
-                - production
+                - test-salts
       - salt6-publish:
           #requires:
           #  - production-approval
           filters:
             branches:
               only:
-                - production
+                - test-salts
       - salt7-publish:
           #requires:
           #  - production-approval
           filters:
             branches:
               only:
-                - production
+                - test-salts
       - salt8-publish:
           #requires:
           #  - production-approval
           filters:
             branches:
               only:
-                - production
+                - test-salts

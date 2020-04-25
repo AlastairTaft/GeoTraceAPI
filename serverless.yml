@@ -2,7 +2,7 @@ service: geo-trace-api
 provider:
   name: aws
   runtime: nodejs12.x
-  stage: ${env:stage, 'dev'}
+  stage: ${env:STAGE, 'dev'}
   region: us-east-1
   environment:
     NODE_ENV: ${self:provider.stage}

@@ -48,6 +48,7 @@ custom:
   customDomain:
     domainName: ${self:custom.self:stage.domainName}
     basePath: ''
+    stage: ${self:provider.stage}
     certificateName: '*.geotrace.io'
     createRoute53Record: true
   production:

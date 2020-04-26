@@ -2,15 +2,11 @@ var memoize = require('memoizee')
 var { getConnection } = require('./db/connect')
 var { handleServerResponse, rateLimit } = require('./server/server')
 var { ServerError } = require('./server/errors')
-var riskMap = require('./db/riskMap')
 var dbUsers = require('./db/users')
 var serverValidation = require('./server/validation')
 var { hashString } = require('./misc/crypto')
-var riskMap = require('./db/riskMap')
-
-var getUserInfected = memoize(dbUsers.getUserInfected, {
-  normalizer: (db, uniqueId) => uniqueId,
-})
+var dbRiskMap = require('./db/riskMap')
+var riskUtil = require('./risk/risk')
 
 /**
  * Submit risk hashes
@@ -20,15 +16,17 @@ const submitRiskMap = async event => {
   var { uniqueId, hashes } = JSON.parse(event.body)
   var { db, client } = await getConnection()
   var riskMapCollection = db.collection('riskMap')
-  await riskMap.bulkInsert(
+  var user = await dbUsers.getCreateUser(db.collection('users'), uniqueId)
+  await dbRiskMap.bulkInsert(
     riskMapCollection,
     hashes.map(({ hash, timePassedSinceExposure }) => ({
       uniqueId,
       hash,
       timePassedSinceExposure,
+      infected: user.infected,
     }))
   )
-  client.close()
+  await client.close()
   // TODO Return user status
   return {
     // As a convenience return some valid JSON so that client's don't
@@ -45,10 +43,10 @@ const reportInfected = async event => {
   serverValidation.validateReportInfectedInput(event)
   var { uniqueId, code } = JSON.parse(event.body)
   var { db, client } = await getConnection()
-  // TODO Validte it is a real code but for testing will allow it through
-  await dbUsers.setUserInfected(db, uniqueId, timestampShowingSymptoms)
-  // TODO Mark all relevant records as atRisk
-  client.close()
+  // TODO Validate it is a real code but for testing will allow it through
+  await dbUsers.updateUser(db.collection('users'), uniqueId, { infected: true })
+  await dbRiskMap.markInfectedHashes(db, uniqueId)
+  await client.close()
   return { 'ok': true }
 }
 
@@ -59,13 +57,14 @@ const getStatus = async event => {
   if (!event.queryStringParameters['unique-id'])
     throw new Error("Missing 'unique-id' prop.")
   var { db, client } = await getConnection()
-  var infected = await dbUsers.getUserInfected(
-    db,
+  var collection = db.collection('users')
+  var user = await dbUsers.getCreateUser(
+    collection,
     event.queryStringParameters['unique-id'],
   )
-  client.close()
+  await client.close()
   return {
-    infected,
+    infected: user.infected,
   }
 }
 
@@ -103,6 +102,29 @@ const getSalt = async event => {
   return { hashes: results }
 }
 
+/**
+ * Analyse risk. To be called periodially on the server
+ */
+var analyseRisk = async event => {
+  var { db, client } = await getConnection()
+  var collection = db.collection('users')
+  var total = await collection.find({}).count()
+  var query = collection.find({})
+  var tally = 0
+  for await (user of query) {
+    tally++
+    console.log(`Processing user ${tally} of ${total}.`)
+    var atRisk = await riskUtil.isUserAtRisk({
+      uniqueId: user.uniqueId,
+      getUserHashes: dbRiskMap.getUserHashes.bind(this, db.collection('riskMap')),
+      getMatchingHashes: dbRiskMap.getMatchingHashes.bind(this, db.collection('riskMap')),
+      chainLength: 1,
+    })
+    await dbUsers.updateUser(db.collection('users'), user.uniqueId, { atRisk })
+  }
+  await client.close()
+}
+
 module.exports = {
   submitRiskMap: handleServerResponse(submitRiskMap),
   reportInfected: handleServerResponse(reportInfected),
@@ -111,5 +133,6 @@ module.exports = {
     handleServerResponse(getSalt), 
     Number(process.env.RATE_LIMIT_INTERVAL)
   ),
+  analyseRisk,
 }
 //1000 * 60 * 60 * 1.5

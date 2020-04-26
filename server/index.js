@@ -140,7 +140,7 @@ const reportAnalysis = async event => {
 
 /**
  * Check the analysis report
- * @return {Promise<string>} Analysis report
+ * @return {Promise<Object>} Analysis report
  */
 const checkAnalysisReport = async event => {
   const uuid = event.queryStringParameters && event.queryStringParameters['uuid']
@@ -148,7 +148,7 @@ const checkAnalysisReport = async event => {
 
   const { db, client } = await getConnection()
 
-  const reportId = await dbAnalysisReports.getReport(db, uuid)
+  const report = await dbAnalysisReports.getReport(db, uuid)
     .catch((e) => {
       console.error(e)
       throw new ServerError("Something went wrong getting the analysis report", 500)
@@ -156,7 +156,7 @@ const checkAnalysisReport = async event => {
 
   client.close()
 
-  return reportId
+  return report
 }
 
 module.exports = {

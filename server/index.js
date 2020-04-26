@@ -6,7 +6,7 @@ var riskMap = require('./db/riskMap')
 var dbUsers = require('./db/users')
 var serverValidation = require('./server/validation')
 var { hashString } = require('./misc/crypto')
-var riskMap = require('./db/riskMap')
+var dbRiskMap = require('./db/riskMap')
 
 var getUserInfected = memoize(dbUsers.getUserInfected, {
   normalizer: (db, uniqueId) => uniqueId,
@@ -20,7 +20,7 @@ const submitRiskMap = async event => {
   var { uniqueId, hashes } = JSON.parse(event.body)
   var { db, client } = await getConnection()
   var riskMapCollection = db.collection('riskMap')
-  await riskMap.bulkInsert(
+  await dbRiskMap.bulkInsert(
     riskMapCollection,
     hashes.map(({ hash, timePassedSinceExposure }) => ({
       uniqueId,
@@ -46,8 +46,8 @@ const reportInfected = async event => {
   var { uniqueId, code } = JSON.parse(event.body)
   var { db, client } = await getConnection()
   // TODO Validte it is a real code but for testing will allow it through
-  await dbUsers.setUserInfected(db, uniqueId, timestampShowingSymptoms)
-  // TODO Mark all relevant records as atRisk
+  await dbUsers.setUserInfected(db, uniqueId)
+  await dbRiskMap.markInfectedHashes(db, uniqueId)
   client.close()
   return { 'ok': true }
 }
@@ -103,6 +103,13 @@ const getSalt = async event => {
   return { hashes: results }
 }
 
+/**
+ * Analyse risk.
+ */
+var analyseRisk = async event => {
+
+}
+
 module.exports = {
   submitRiskMap: handleServerResponse(submitRiskMap),
   reportInfected: handleServerResponse(reportInfected),
@@ -111,5 +118,6 @@ module.exports = {
     handleServerResponse(getSalt), 
     Number(process.env.RATE_LIMIT_INTERVAL)
   ),
+  analyseRisk: handleServerResponse(analyseRisk),
 }
 //1000 * 60 * 60 * 1.5

@@ -133,14 +133,14 @@ const reportAnalysis = async event => {
   const valid = await dbAuthorities.validToken(db, authorization)
   if(!valid) throw new ServerError("The authority is not valid'", 400)
 
-  const reportId = await dbAnalysisReports.saveReport(db, date)
+  const reportUuid = await dbAnalysisReports.saveReport(db, date)
     .catch(() => {
       throw new ServerError("Something went wrong reporting the analysis", 500)
     })
 
   client.close()
 
-  return reportId
+  return reportUuid
 }
 
 /**
@@ -154,7 +154,8 @@ const checkAnalysisReport = async event => {
   const { db, client } = await getConnection()
 
   const reportId = await dbAnalysisReports.getReport(db, uuid)
-    .catch(() => {
+    .catch((e) => {
+      console.error(e)
       throw new ServerError("Something went wrong getting the analysis report", 500)
     })
 

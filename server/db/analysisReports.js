@@ -15,7 +15,7 @@ const generateUuid = async (db) => {
  * Get the report with the specified id
  * @param {MongoDB} db
  * @param {string} uuid
- * @returns {Promise}
+ * @returns {Promise<object>} Information about the report
  */
 const getReport = async (
   db,
@@ -32,7 +32,7 @@ const getReport = async (
  * Save a report
  * @param {MongoDB} db
  * @param {Date} date
- * @returns {Promise}
+ * @returns {Promise<string>} UUID of the report inserted in database
  */
 const saveReport = async (
   db,
@@ -50,7 +50,7 @@ const saveReport = async (
  * Check if the analysis report is used
  * @param {MongoDB} db
  * @param {string} uuid
- * @returns {Promise}
+ * @returns {Promise<boolean | undefined>} the report has been used or not (undefined if could not get value)
  */
 const isUsed = async (
   db,
@@ -67,7 +67,7 @@ const isUsed = async (
  * Set an analysis report as used
  * @param {MongoDB} db
  * @param {string} uuid
- * @returns {Promise}
+ * @returns {Promise<boolean>} it was success or not
  */
 const setUsed = async (
   db,

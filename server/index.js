@@ -25,7 +25,7 @@ const submitRiskMap = async event => {
       infected: user.infected,
     }))
   )
-  client.close()
+  await client.close()
   // TODO Return user status
   return {
     // As a convenience return some valid JSON so that client's don't

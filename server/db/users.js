@@ -27,6 +27,10 @@ const updateUser = async function (
 const getCreateUser = async function (collection, uniqueId) {
   // TODO Update when user has recovered
   var record = await collection.findOne({ uniqueId })
+  if (!record){
+    record = { uniqueId, infected: false }
+    await collection.insertOne(record)
+  }
   return record
 }
 

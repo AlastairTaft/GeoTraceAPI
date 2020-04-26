@@ -44,26 +44,6 @@ const markInfectedHashes = function(collection, uniqueId){
   )
 }
 
-var markUsersAtRisk = function(db){
-
-  var dbInfected = db.collection('infected')
-  var infectedCursor = dbInfected.find({})
-  for await (const infectedRec of infectedCursor) {
-    var { uniqueId } = infectedRec
-    
-  }
-
-
-  var getAtRiskHashRecords = async function(uniqueId){
-    collection.find
-  }
-
-  var hashes = await getAtRiskHashes(uniqueId)
-  var atRiskHashesObj = {}
-  hashes.forEach(hash => {
-    atRiskHashesObj[hash] = true
-  })
-}
 
 module.exports = { 
   bulkInsert,

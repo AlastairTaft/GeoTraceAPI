@@ -1,5 +1,4 @@
 var memoize = require('memoizee')
-var moment = require('moment')
 var { getConnection } = require('./db/connect')
 var { handleServerResponse, rateLimit } = require('./server/server')
 var { ServerError } = require('./server/errors')
@@ -122,8 +121,11 @@ const reportAnalysis = async event => {
   if (!authorization) throw new ServerError("Missing header 'authorization'", 400)
 
   let { date } = JSON.parse(event.body)
-  date = moment(date)
-  if (!date.isValid()) throw new ServerError("Missing or invalid 'date' prop.", 400)
+  if (!date || isNaN(new Date(date).getTime())) {
+    throw new ServerError("Missing or invalid 'date' prop.", 400)
+  } else {
+    date = new Date(date)
+  }
 
   const { db, client } = await getConnection()
 

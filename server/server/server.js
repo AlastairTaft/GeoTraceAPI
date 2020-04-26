@@ -54,8 +54,6 @@ const rateLimit = (handler, timeInterval) => async (...args) => {
   // Ensure each IP can only call once per time interval
   var { requestTimeEpoch, requestId, identity } = args[0].requestContext
   var { sourceIp, userAgent } = identity
-
-
   var { db, client } = await getConnection()
   var collection = db.collection('requests')
   var lastRequest = await getRequest(collection, sourceIp)
@@ -78,7 +76,6 @@ const rateLimit = (handler, timeInterval) => async (...args) => {
   }
   await markRequest(collection, sourceIp, requestTimeEpoch)
   await client.close()
-
   return handler(...args)
 }
 

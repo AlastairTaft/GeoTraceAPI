@@ -17,11 +17,44 @@ publish: &publish
     - run:
         name: Deploy serverless
         command: |
-          npx serverless deploy \
-            --stage production
+          npx serverless deploy
 
 jobs:
   production-publish:
+    environment:
+      STAGE: production
+    <<: *publish
+  salt1-publish:
+    environment:
+      STAGE: salt1
+    <<: *publish
+  salt2-publish:
+    environment:
+      STAGE: salt2
+    <<: *publish
+  salt3-publish:
+    environment:
+      STAGE: salt3
+    <<: *publish
+  salt4-publish:
+    environment:
+      STAGE: salt4
+    <<: *publish
+  salt5-publish:
+    environment:
+      STAGE: salt5
+    <<: *publish
+  salt6-publish:
+    environment:
+      STAGE: salt6
+    <<: *publish
+  salt7-publish:
+    environment:
+      STAGE: salt7
+    <<: *publish
+  salt8-publish:
+    environment:
+      STAGE: salt8
     <<: *publish
 
 workflows:
@@ -35,6 +68,62 @@ workflows:
               only:
                 - production
       - production-publish:
+          requires:
+            - production-approval
+          filters:
+            branches:
+              only:
+                - production
+      - salt1-publish:
+          requires:
+            - production-approval
+          filters:
+            branches:
+              only:
+                - production
+      - salt2-publish:
+          requires:
+            - production-approval
+          filters:
+            branches:
+              only:
+                - production
+      - salt3-publish:
+          requires:
+            - production-approval
+          filters:
+            branches:
+              only:
+                - production
+      - salt4-publish:
+          requires:
+            - production-approval
+          filters:
+            branches:
+              only:
+                - production
+      - salt5-publish:
+          requires:
+            - production-approval
+          filters:
+            branches:
+              only:
+                - production
+      - salt6-publish:
+          requires:
+            - production-approval
+          filters:
+            branches:
+              only:
+                - production
+      - salt7-publish:
+          requires:
+            - production-approval
+          filters:
+            branches:
+              only:
+                - production
+      - salt8-publish:
           requires:
             - production-approval
           filters:

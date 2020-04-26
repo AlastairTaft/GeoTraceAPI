@@ -134,7 +134,8 @@ const reportAnalysis = async event => {
   if(!valid) throw new ServerError("The authority is not valid'", 400)
 
   const reportUuid = await dbAnalysisReports.saveReport(db, date)
-    .catch(() => {
+    .catch((e) => {
+      console.error(e)
       throw new ServerError("Something went wrong reporting the analysis", 500)
     })
 

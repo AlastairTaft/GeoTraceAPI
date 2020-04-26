@@ -1,13 +1,18 @@
 const AnalysisReport = require('./model/AnalysisReport')
-
-const randomNumbers = (size) => Math.random().toString().substring(2, size + 2)
+const randomNumber = require("random-number-csprng")
 
 const generateUuid = async (db) => {
-  const uuid = `${randomNumbers(4)}-${randomNumbers(4)}-${randomNumbers(2)}`
-  let unique
+  let uuid, unique
+
   do {
+    const high = (await randomNumber(0, 9999)).toString().padStart(4, '0')
+    const mid = (await randomNumber(0, 9999)).toString().padStart(4, '0')
+    const low = (await randomNumber(0, 9999)).toString().padStart(4, '0')
+
+    uuid = `${high}-${mid}-${low}`
     unique = await db.collection('analysisReports').find({ uuid }).count() === 0
   } while(!unique)
+
   return uuid
 }
 

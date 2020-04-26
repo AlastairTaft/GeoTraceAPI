@@ -41,6 +41,12 @@ functions:
           path: /get-salt
           method: POST
           cors: true
+  analyseRisk:
+    handler: server/index.analyseRisk
+    events:
+      - schedule:
+          description: 'Check and update which users are at risk.'
+          rate: rate(30 minutes)
     
 custom:
   serverless-offline:

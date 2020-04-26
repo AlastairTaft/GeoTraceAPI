@@ -6,6 +6,7 @@ var dbUsers = require('./db/users')
 var serverValidation = require('./server/validation')
 var { hashString } = require('./misc/crypto')
 var dbRiskMap = require('./db/riskMap')
+var riskUtil = require('./risk/risk')
 
 /**
  * Submit risk hashes
@@ -105,7 +106,23 @@ const getSalt = async event => {
  * Analyse risk. To be called periodially on the server
  */
 var analyseRisk = async event => {
-
+  var { db, client } = await getConnection()
+  var collection = db.collection('users')
+  var total = await collection.find({}).count()
+  var query = collection.find({})
+  var tally = 0
+  for await (user of query) {
+    tally++
+    console.log(`Processing user ${tally} of ${total}.`)
+    var atRisk = await riskUtil.isUserAtRisk({
+      uniqueId: user.uniqueId,
+      getUserHashes: dbRiskMap.getUserHashes.bind(this, db.collection('riskMap')),
+      getMatchingHashes: dbRiskMap.getMatchingHashes.bind(this, db.collection('riskMap')),
+      chainLength: 1,
+    })
+    await dbUsers.updateUser(db.collection('users'), user.uniqueId, { atRisk })
+  }
+  await client.close()
 }
 
 module.exports = {

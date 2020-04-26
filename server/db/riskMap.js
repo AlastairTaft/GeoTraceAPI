@@ -44,8 +44,27 @@ const markInfectedHashes = function(collection, uniqueId){
   )
 }
 
+/**
+ * Get all the user's hashes.
+ */
+const getUserHashes = function(collection, uniqueId){
+  return collection.find(
+    { uniqueId }
+  ).toArray()
+}
+
+/**
+ * Get all the recors that have matching hash strings
+ */
+const getMatchingHashes = function(collection, hashStrings){
+  return collection.find(
+    { uniqueId, hash: { $in: hashStrings }}
+  ).toArray()
+}
 
 module.exports = { 
   bulkInsert,
   markInfectedHashes,
+  getUserHashes,
+  getMatchingHashes
 }

@@ -30,12 +30,7 @@ const submitRiskMap = async event => {
     }))
   )
   await client.close()
-  // TODO Return user status
-  return {
-    // As a convenience return some valid JSON so that client's don't
-    // fall over trying to parse the response.
-    'all good': '👌',
-  }
+  return getStatus({ queryStringParameters: { 'unique-id': uniqueId } })
 }
 
 
@@ -46,8 +41,6 @@ const reportInfected = async event => {
   serverValidation.validateReportInfectedInput(event)
   var { uniqueId, code } = JSON.parse(event.body)
   var { db, client } = await getConnection()
-
-  
 
   // Validate it is a real code but for testing will allow it through
   var reportCollection = db.collection('reportCodes')
@@ -94,6 +87,7 @@ const getStatus = async event => {
   await client.close()
   return {
     infected: user.infected,
+    atRisk: user.atRisk,
   }
 }
 

@@ -7,6 +7,9 @@ var serverValidation = require('./server/validation')
 var { hashString } = require('./misc/crypto')
 var dbRiskMap = require('./db/riskMap')
 var riskUtil = require('./risk/risk')
+var dbHealthAuthorities = require('./db/healthAuthorityAccessKeys')
+var dbCodes = require('./db/reportCodes')
+var miscCodes = require('./misc/codes')
 
 /**
  * Submit risk hashes
@@ -43,9 +46,35 @@ const reportInfected = async event => {
   serverValidation.validateReportInfectedInput(event)
   var { uniqueId, code } = JSON.parse(event.body)
   var { db, client } = await getConnection()
-  // TODO Validate it is a real code but for testing will allow it through
-  await dbUsers.updateUser(db.collection('users'), uniqueId, { infected: true })
-  await dbRiskMap.markInfectedHashes(db, uniqueId)
+
+  
+
+  // Validate it is a real code but for testing will allow it through
+  var reportCollection = db.collection('reportCodes')
+  var record = await reportCollection.findOne({ code })
+  if (!record)
+    throw new ServerError('Invalid code.', 400)
+  if (record.usedBy){
+    if (record.usedBy != uniqueId)
+      throw new ServerError('Invalid code.', 400)
+    // Record is already used so don't do anything but keep this operation 
+    // indempotent
+  } else {
+    var collection = db.collection('users')
+    var user = await dbUsers.getCreateUser(
+      collection,
+      uniqueId,
+    )
+    if(user.infected)
+      throw new ServerError('Already reported as infected.', 400) 
+
+    await reportCollection.updateOne(
+      { code }, 
+      { $set: { usedBy: uniqueId, usedAt: (new Date()).valueOf() }}
+    )
+    await dbUsers.updateUser(db.collection('users'), uniqueId, { infected: true })
+    await dbRiskMap.markInfectedHashes(db, uniqueId)
+  }
   await client.close()
   return { 'ok': true }
 }
@@ -125,6 +154,32 @@ var analyseRisk = async event => {
   await client.close()
 }
 
+const generateCode = async event => {
+  var { accessKey } = JSON.parse(event.body)
+  if (!accessKey)
+    throw new ServerError('Missing \'accessKey\'.', 400)
+
+  
+  var { db, client } = await getConnection()
+  var authoritiesCollection = db.collection('healthAuthorityAccessKeys')
+
+  var accessKeyRecord = await dbHealthAuthorities.getAccessKey(
+    authoritiesCollection, accessKey)
+  if (!accessKeyRecord)
+    throw new ServerError('Not authorised.', 401)
+
+  var reportCollection = db.collection('reportCodes')
+  var code = await dbCodes.createCode(reportCollection, {
+    code: miscCodes.generateCode(),
+    healthAuthorityId: accessKeyRecord._id,
+  })
+  await client.close()
+
+  return {
+    code: code.code,
+  }
+}
+
 module.exports = {
   submitRiskMap: handleServerResponse(submitRiskMap),
   reportInfected: handleServerResponse(reportInfected),
@@ -134,5 +189,6 @@ module.exports = {
     Number(process.env.RATE_LIMIT_INTERVAL)
   ),
   analyseRisk,
+  generateCode: handleServerResponse(generateCode),
 }
 //1000 * 60 * 60 * 1.5

@@ -30,9 +30,10 @@ const bulkInsert = (collection, hashes) => {
 
 /**
  * Mark hashes as infected.
+ * @param {MongoCollection} collection
  */
 const markInfectedHashes = function(collection, uniqueId){
-  return collection.updateMany(
+  return collection.updateAll(
     { 
       uniqueId, 
       // Mark an area as at risk for up to 2 hours after the infected user 

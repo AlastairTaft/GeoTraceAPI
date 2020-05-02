@@ -47,6 +47,14 @@ functions:
       - schedule:
           description: 'Check and update which users are at risk.'
           rate: rate(30 minutes)
+  generateCode:
+    handler: server/index.generateCode
+    events:
+      - http:
+          path: /generate-code
+          method: POST
+          cors: true
+  
     
 custom:
   serverless-offline:

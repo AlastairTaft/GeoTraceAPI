@@ -7,6 +7,9 @@ var serverValidation = require('./server/validation')
 var { hashString } = require('./misc/crypto')
 var dbRiskMap = require('./db/riskMap')
 var riskUtil = require('./risk/risk')
+var dbHealthAuthorities = require('./db/healthAuthorityAccessKeys')
+var dbCodes = require('./db/reportCodes')
+var miscCodes = require('./misc/codes')
 
 /**
  * Submit risk hashes
@@ -125,6 +128,33 @@ var analyseRisk = async event => {
   await client.close()
 }
 
+const generateCode = async event => {
+  var { accessKey } = JSON.parse(event.body)
+  if (!accessKey)
+    throw new ServerError('Missing \'accessKey\'.', 400)
+
+  
+  var { db, client } = await getConnection()
+  var authoritiesCollection = db.collection('healthAuthorityAccessKeys')
+
+  var accessKeyRecord = await dbHealthAuthorities.getAccessKey(
+    authoritiesCollection, accessKey)
+  if (!accessKeyRecord)
+    throw new ServerError('Not authorised.', 401)
+
+  var reportCollection = db.collection('reportCodes')
+  var code = await dbCodes.createCode(reportCollection, {
+    code: miscCodes.generateCode(),
+    healthAuthorityId: accessKeyRecord._id,
+  })
+  console.log('#code', code)
+  await client.close()
+
+  return {
+    code: code.code,
+  }
+}
+
 module.exports = {
   submitRiskMap: handleServerResponse(submitRiskMap),
   reportInfected: handleServerResponse(reportInfected),
@@ -134,5 +164,6 @@ module.exports = {
     Number(process.env.RATE_LIMIT_INTERVAL)
   ),
   analyseRisk,
+  generateCode: handleServerResponse(generateCode),
 }
 //1000 * 60 * 60 * 1.5

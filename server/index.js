@@ -46,9 +46,35 @@ const reportInfected = async event => {
   serverValidation.validateReportInfectedInput(event)
   var { uniqueId, code } = JSON.parse(event.body)
   var { db, client } = await getConnection()
-  // TODO Validate it is a real code but for testing will allow it through
-  await dbUsers.updateUser(db.collection('users'), uniqueId, { infected: true })
-  await dbRiskMap.markInfectedHashes(db, uniqueId)
+
+  
+
+  // Validate it is a real code but for testing will allow it through
+  var reportCollection = db.collection('reportCodes')
+  var record = await reportCollection.findOne({ code })
+  if (!record)
+    throw new ServerError('Invalid code.', 400)
+  if (record.usedBy){
+    if (record.usedBy != uniqueId)
+      throw new ServerError('Invalid code.', 400)
+    // Record is already used so don't do anything but keep this operation 
+    // indempotent
+  } else {
+    var collection = db.collection('users')
+    var user = await dbUsers.getCreateUser(
+      collection,
+      uniqueId,
+    )
+    if(user.infected)
+      throw new ServerError('Already reported as infected.', 400) 
+
+    await reportCollection.updateOne(
+      { code }, 
+      { $set: { usedBy: uniqueId, usedAt: (new Date()).valueOf() }}
+    )
+    await dbUsers.updateUser(db.collection('users'), uniqueId, { infected: true })
+    await dbRiskMap.markInfectedHashes(db, uniqueId)
+  }
   await client.close()
   return { 'ok': true }
 }
@@ -147,7 +173,6 @@ const generateCode = async event => {
     code: miscCodes.generateCode(),
     healthAuthorityId: accessKeyRecord._id,
   })
-  console.log('#code', code)
   await client.close()
 
   return {

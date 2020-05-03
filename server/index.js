@@ -36,9 +36,19 @@ const submitRiskMap = async event => {
     }))
   )
   console.log('#insert done')
-  await client.close()
+
   console.log('#getting status')
-  return getStatus({ queryStringParameters: { 'unique-id': uniqueId } })
+  var collection = db.collection('users')
+  var user = await dbUsers.getCreateUser(
+    collection,
+    event.queryStringParameters['unique-id'],
+  )
+  console.log('#user', user)
+  await client.close()
+  return {
+    infected: user.infected,
+    atRisk: user.atRisk,
+  }
 }
 
 

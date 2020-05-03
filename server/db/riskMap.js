@@ -59,7 +59,7 @@ const getUserHashes = function(collection, uniqueId){
  */
 const getMatchingHashes = function(collection, hashStrings){
   return collection.find(
-    { uniqueId, hash: { $in: hashStrings }}
+    { hash: { $in: hashStrings }}
   ).toArray()
 }
 

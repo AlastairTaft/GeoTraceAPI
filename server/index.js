@@ -29,8 +29,16 @@ const submitRiskMap = async event => {
       infected: user.infected,
     }))
   )
+  var collection = db.collection('users')
+  var user = await dbUsers.getCreateUser(
+    collection,
+    uniqueId,
+  )
   await client.close()
-  return getStatus({ queryStringParameters: { 'unique-id': uniqueId } })
+  return {
+    infected: user.infected,
+    atRisk: user.atRisk,
+  }
 }
 
 

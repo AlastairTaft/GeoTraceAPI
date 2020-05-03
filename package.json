@@ -15,7 +15,7 @@
     "serverless-offline": "^6.1.2"
   },
   "scripts": {
-    "start": "MONGO_URL=mongodb://localhost:27017 MONGO_DATABASE=covid RATE_LIMIT_INTERVAL=0 SECRET=foobar nodemon --exec \"sls offline start\" -e \"js\"",
+    "start": "MONGO_URL=mongodb://localhost:27017/covid RATE_LIMIT_INTERVAL=0 SECRET=foobar nodemon --exec \"sls offline start\" -e \"js\"",
     "test": "jest"
   }
 }

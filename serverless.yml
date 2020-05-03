@@ -7,7 +7,6 @@ provider:
   environment:
     NODE_ENV: ${self:provider.stage}
     MONGO_URL: ${env:MONGO_URL}
-    MONGO_DATABASE: ${env:MONGO_DATABASE}
     SECRET: ${self:custom.${self:provider.stage}.SECRET}
 plugins:
   - serverless-offline

@@ -5,10 +5,9 @@ const MongoClient = require('mongodb').MongoClient
  */
 const getConnection = async function () {
   const url = process.env.MONGO_URL
-  const dbName = process.env.MONGO_DATABASE
   const client = new MongoClient(url, { useUnifiedTopology: true })
   await client.connect()
-  const db = client.db(dbName)
+  const db = client.db()
   return { client, db }
 }
 

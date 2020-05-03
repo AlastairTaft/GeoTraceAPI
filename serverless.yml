@@ -12,48 +12,8 @@ provider:
 plugins:
   - serverless-offline
   - serverless-domain-manager
-functions:
-  submitLocationHistory:
-    handler: server/index.submitRiskMap
-    events: 
-      - http:
-          path: /submit-risk-map
-          method: POST
-          cors: true
-  reportInfected:
-    handler: server/index.reportInfected
-    events: 
-      - http:
-          path: /report-infected
-          method: PUT
-          cors: true
-  status:
-    handler: server/index.getStatus
-    events: 
-      - http:
-          path: /status
-          method: GET
-          cors: true
-  getSalt:
-    handler: server/index.getSalt
-    events: 
-      - http:
-          path: /get-salt
-          method: POST
-          cors: true
-  analyseRisk:
-    handler: server/index.analyseRisk
-    events:
-      - schedule:
-          description: 'Check and update which users are at risk.'
-          rate: rate(30 minutes)
-  generateCode:
-    handler: server/index.generateCode
-    events:
-      - http:
-          path: /generate-code
-          method: POST
-          cors: true
+functions: ${self:custom.${self:provider.stage}.functions}
+  
   
     
 custom:
@@ -67,27 +27,79 @@ custom:
     createRoute53Record: true
   production:
     domainName: api.geotrace.io
+    functions: ${self:custom.centralServerFunctions}
   salt1:
     domainName: salt1.geotrace.io
     SECRET: ${env:SALT1_SECRET}
+    functions: ${self:custom.saltServerFunctions}
   salt2:
     domainName: salt2.geotrace.io
     SECRET: ${env:SALT2_SECRET}
+    functions: ${self:custom.saltServerFunctions}
   salt3:
     domainName: salt3.geotrace.io
     SECRET: ${env:SALT3_SECRET}
+    functions: ${self:custom.saltServerFunctions}
   salt4:
     domainName: salt4.geotrace.io
     SECRET: ${env:SALT4_SECRET}
+    functions: ${self:custom.saltServerFunctions}
   salt5:
     domainName: salt5.geotrace.io
     SECRET: ${env:SALT5_SECRET}
+    functions: ${self:custom.saltServerFunctions}
   salt6:
     domainName: salt6.geotrace.io
     SECRET: ${env:SALT6_SECRET}
+    functions: ${self:custom.saltServerFunctions}
   salt7:
     domainName: salt7.geotrace.io
     SECRET: ${env:SALT7_SECRET}
+    functions: ${self:custom.saltServerFunctions}
   salt8:
     domainName: salt8.geotrace.io
     SECRET: ${env:SALT8_SECRET}
+    functions: ${self:custom.saltServerFunctions}
+  centralServerFunctions:
+    submitLocationHistory:
+      handler: server/index.submitRiskMap
+      events: 
+        - http:
+            path: /submit-risk-map
+            method: POST
+            cors: true
+    reportInfected:
+      handler: server/index.reportInfected
+      events: 
+        - http:
+            path: /report-infected
+            method: PUT
+            cors: true
+    status:
+      handler: server/index.getStatus
+      events: 
+        - http:
+            path: /status
+            method: GET
+            cors: true
+    analyseRisk:
+      handler: server/index.analyseRisk
+      events:
+        - schedule:
+            description: 'Check and update which users are at risk.'
+            rate: rate(30 minutes)
+    generateCode:
+      handler: server/index.generateCode
+      events:
+        - http:
+            path: /generate-code
+            method: POST
+            cors: true
+  saltServerFunctions:
+    getSalt:
+      handler: server/index.getSalt
+      events: 
+        - http:
+            path: /get-salt
+            method: POST
+            cors: true

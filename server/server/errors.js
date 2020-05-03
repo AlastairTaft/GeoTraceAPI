@@ -6,10 +6,12 @@ class ServerError extends Error {
   /**
    * @param {string} message
    * @param {string|number} statusCode 
+   * @param {string} errorCode 
    */
-  constructor(message, statusCode) {
+  constructor(message, statusCode, errorCode) {
     super(message)
     this.statusCode = statusCode
+    this.errorCode = errorCode
   }
 }
 

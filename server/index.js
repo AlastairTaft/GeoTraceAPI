@@ -57,7 +57,7 @@ const reportInfected = async event => {
     throw new ServerError('Invalid code.', 400)
   if (record.usedBy){
     if (record.usedBy != uniqueId)
-      throw new ServerError('Invalid code.', 400)
+      throw new ServerError('Invalid code.', 400, 'INVALID_CODE')
     // Record is already used so don't do anything but keep this operation 
     // indempotent
   } else {

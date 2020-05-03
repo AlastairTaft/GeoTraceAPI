@@ -39,6 +39,7 @@ const handleServerResponse = handler => async (...args) => {
         {
           message: err.message,
           stack: process.env.NODE_ENV === 'dev' ? err.stack : undefined,
+          code: err.errorCode,
         },
         null,
         2,

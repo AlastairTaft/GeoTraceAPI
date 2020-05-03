@@ -54,7 +54,7 @@ const reportInfected = async event => {
   var reportCollection = db.collection('reportCodes')
   var record = await reportCollection.findOne({ code })
   if (!record)
-    throw new ServerError('Invalid code.', 400)
+    throw new ServerError('Invalid code.', 400, 'INVALID_CODE')
   if (record.usedBy){
     if (record.usedBy != uniqueId)
       throw new ServerError('Invalid code.', 400, 'INVALID_CODE')

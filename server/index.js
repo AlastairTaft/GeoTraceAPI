@@ -15,11 +15,17 @@ var miscCodes = require('./misc/codes')
  * Submit risk hashes
  */
 const submitRiskMap = async event => {
+  console.log('Request receieved.')
   if (!event.body) throw new ServerError('Missing body content.', 400)
   var { uniqueId, hashes } = JSON.parse(event.body)
+  console.log('#uniqueId', uniqueId)
+  console.log('#hashes', hashes)
   var { db, client } = await getConnection()
+  console.log('got connection')
   var riskMapCollection = db.collection('riskMap')
+  console.log('got collection')
   var user = await dbUsers.getCreateUser(db.collection('users'), uniqueId)
+  console.log('#user')
   await dbRiskMap.bulkInsert(
     riskMapCollection,
     hashes.map(({ hash, timePassedSinceExposure }) => ({
@@ -29,7 +35,9 @@ const submitRiskMap = async event => {
       infected: user.infected,
     }))
   )
+  console.log('#insert done')
   await client.close()
+  console.log('#getting status')
   return getStatus({ queryStringParameters: { 'unique-id': uniqueId } })
 }
 

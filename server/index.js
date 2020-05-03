@@ -20,15 +20,16 @@ const submitRiskMap = async event => {
   var { db, client } = await getConnection()
   var riskMapCollection = db.collection('riskMap')
   var user = await dbUsers.getCreateUser(db.collection('users'), uniqueId)
-  await dbRiskMap.bulkInsert(
-    riskMapCollection,
-    hashes.map(({ hash, timePassedSinceExposure }) => ({
-      uniqueId,
-      hash,
-      timePassedSinceExposure,
-      infected: user.infected,
-    }))
-  )
+  if (hashes.length)
+    await dbRiskMap.bulkInsert(
+      riskMapCollection,
+      hashes.map(({ hash, timePassedSinceExposure }) => ({
+        uniqueId,
+        hash,
+        timePassedSinceExposure,
+        infected: user.infected,
+      }))
+    )
   var collection = db.collection('users')
   var user = await dbUsers.getCreateUser(
     collection,

@@ -58,7 +58,7 @@ custom:
     SECRET: ${env:SALT8_SECRET}
     functions: ${self:custom.saltServerFunctions}
   centralServerFunctions:
-    submitLocationHistory:
+    submitRiskMap:
       handler: server/index.submitRiskMap
       events: 
         - http:

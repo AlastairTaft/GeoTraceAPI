@@ -12,10 +12,7 @@ provider:
 plugins:
   - serverless-offline
   - serverless-domain-manager
-functions: ${self:custom.${self:provider.stage}.functions}
-  
-  
-    
+functions: ${self:custom.${self:provider.stage}.functions}  
 custom:
   serverless-offline:
     port: 5001

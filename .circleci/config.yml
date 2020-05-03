@@ -68,21 +68,19 @@ workflows:
               only:
                 - production
       - production-publish:
-          #requires:
-          #  - production-approval
+          requires:
+            - production-approval
           filters:
             branches:
               only:
-          #      - production
-                 - fix-deployment
+                - production
       - salt1-publish:
-          #requires:
-          #  - production-approval
+          requires:
+            - production-approval
           filters:
             branches:
               only:
-          #      - production
-                 - fix-deployment
+                - production
       - salt2-publish:
           requires:
             - production-approval

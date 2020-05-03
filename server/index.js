@@ -41,7 +41,7 @@ const submitRiskMap = async event => {
   var collection = db.collection('users')
   var user = await dbUsers.getCreateUser(
     collection,
-    event.queryStringParameters['unique-id'],
+    uniqueId,
   )
   console.log('#user', user)
   await client.close()

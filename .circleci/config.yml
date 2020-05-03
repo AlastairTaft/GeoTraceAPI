@@ -74,7 +74,7 @@ workflows:
             branches:
               only:
                 - production
-                - fix-deployment
+                - fix-deployment2
       - salt1-publish:
           requires:
             - production-approval

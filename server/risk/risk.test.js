@@ -1,18 +1,5 @@
 var methods = require('./risk')
 
-/**
- *  \    / \    /    
- *  A\ B/  C\ D/
- *    \/     \/   
- *    1      2  
- *    /\     /\
- *  A/ B\  C/ D\
- *  /    \ /    \
- * 3      4      5
- */
-var timeline1 = []
-
-
 describe('#risk', () => {
   describe('#getAtRiskUsers', () => {
 
@@ -34,18 +21,18 @@ describe('#risk', () => {
         { hash: '1', uniqueId: 'B' },
         { hash: '2', uniqueId: 'C' },
         { hash: '2', uniqueId: 'D' },
-        { hash: '3', uniqueId: 'A', prevHash: '1', infected: true },
-        { hash: '4', uniqueId: 'B', prevHash: '1' },
-        { hash: '4', uniqueId: 'C', prevHash: '2' },
-        { hash: '5', uniqueId: 'D', prevHash: '2' },
+        { hash: '3', uniqueId: 'A', infected: true },
+        { hash: '4', uniqueId: 'B' },
+        { hash: '4', uniqueId: 'C' },
+        { hash: '5', uniqueId: 'D' },
       ]
-      const getUserHashes = uniqueIds => {
+      const getUserHashes = async uniqueIds => {
         if (uniqueIds instanceof Array == false)
           throw new Error('Expected array for \'uniqueIds\'.')
         return dataPoints
           .filter(dto => uniqueIds.includes(dto.uniqueId))
       }
-      const getMatchingHashes = hashes => {
+      const getMatchingHashes = async hashes => {
         return dataPoints
           .filter(dto => hashes.some(hash => hash == dto.hash))
       }
@@ -73,7 +60,7 @@ describe('#risk', () => {
 
     })
 
-    it(`#foobar A should not be at risk because B interacted with the infected C after
+    it(`A should not be at risk because B interacted with the infected C after
       A interacted with B.
         \    / \   
         A\ B/  C\
@@ -92,7 +79,7 @@ describe('#risk', () => {
         { hash: '4', uniqueId: 'B', timestamp: 2 },
         { hash: '4', uniqueId: 'C', timestamp: 2, infected: true },
       ]
-      const getUserHashes = (uniqueIds, opt_beforeTimestamp) => {
+      const getUserHashes = async (uniqueIds, opt_beforeTimestamp) => {
         if (uniqueIds instanceof Array == false)
           throw new Error('Expected array for \'uniqueIds\'.')
         return dataPoints
@@ -103,12 +90,12 @@ describe('#risk', () => {
             return true
           })
       }
-      const getMatchingHashes = hashes => {
+      const getMatchingHashes = async hashes => {
         return dataPoints
           .filter(dto => hashes.some(hash => hash == dto.hash))
       }
       var isAAtRisk = await methods.isUserAtRisk({
-        uniqueId: 'B',
+        uniqueId: 'A',
         getUserHashes,
         getMatchingHashes,
         chainLength: 2,
@@ -133,13 +120,13 @@ describe('#risk', () => {
         { hash: 'At the supermarket', uniqueId: 'Geoff' },
         { hash: 'At the supermarket', uniqueId: 'Sally' },
       ]
-       const getUserHashes = uniqueIds => {
+       const getUserHashes = async uniqueIds => {
         if (uniqueIds instanceof Array == false)
           throw new Error('Expected array for \'uniqueIds\'.')
         return dataPoints
           .filter(dto => uniqueIds.includes(dto.uniqueId))
       }
-      const getMatchingHashes = hashes => {
+      const getMatchingHashes = async hashes => {
         return dataPoints
           .filter(dto => hashes.some(hash => hash == dto.hash))
       }
@@ -170,13 +157,13 @@ describe('#risk', () => {
         { hash: 'At the supermarket', uniqueId: 'Geoff' },
         { hash: 'At the supermarket', uniqueId: 'Sally' },
       ]
-      const getUserHashes = uniqueIds => {
+      const getUserHashes = async uniqueIds => {
         if (uniqueIds instanceof Array == false)
           throw new Error('Expected array for \'uniqueIds\'.')
         return dataPoints
           .filter(dto => uniqueIds.includes(dto.uniqueId))
       }
-      const getMatchingHashes = hashes => {
+      const getMatchingHashes = async hashes => {
         return dataPoints
           .filter(dto => hashes.some(hash => hash == dto.hash))
       }

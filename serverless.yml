@@ -21,6 +21,8 @@ custom:
     stage: ${self:provider.stage}
     certificateName: '*.geotrace.io'
     createRoute53Record: true
+  dev:
+    functions: ${self:custom.centralServerFunctions}
   production:
     domainName: api.geotrace.io
     functions: ${self:custom.centralServerFunctions}

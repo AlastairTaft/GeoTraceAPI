@@ -183,5 +183,6 @@ describe('#risk', () => {
       expect(isSallyInfected).toBe(true)
 
     })
+
   })
 })

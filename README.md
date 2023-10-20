@@ -1,3 +1,6 @@
+# ⚠️ Archived
+This repo archived. It was built as part of a [hackathon project](https://devpost.com/software/trace-together).
+
 # What is it?
 An API to privately store the location data for COVID-19 diagnosed cases in Tasmania. And improve the ability to contact trace. It stores location data from people that are both diagnosed and not diagnoses with COVID-19. For the simple ability that contacts can be immediately notifified if they have historically crossed paths with a newly diagnosed case.
 
